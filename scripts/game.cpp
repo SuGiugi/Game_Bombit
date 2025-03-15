@@ -102,6 +102,10 @@ void Game::update() {
         if (it->isExploded()) {
             SDL_Log("Bomb exploded at (%d, %d)", it->getX(), it->getY());
             // TODO: implement explosion effects and damage
+            if (player.getX() >= it->getX() - SIZE_EXPLODE || player.getX() <= it->getX() + SIZE_EXPLODE || player.getY() >= it->getY() - SIZE_EXPLODE || player.getY() <= it->getY() + SIZE_EXPLODE)
+                {
+                    SDL_Log("Die");
+                }
             it = bombs.erase(it);
 
         } else {
