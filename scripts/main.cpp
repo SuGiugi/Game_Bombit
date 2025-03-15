@@ -1,41 +1,19 @@
 #include <SDL.h>
+#include "game.h"
+#include <memory>  // For smart pointers
 
-int main(int argc, char* args []) {
-    SDL_Init(SDL_INIT_VIDEO);
+int main(int argc, char* argv[]) {
+    std::unique_ptr<Game> game = std::make_unique<Game>();
 
-    SDL_Window* window = SDL_CreateWindow("Blank Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
-    if (window == nullptr) {
-        SDL_Log("Failed to create window: %s", SDL_GetError());
+    if (!game->init()) {
+        SDL_Log("Game initialization failed. See previous SDL_Log messages.");
         return 1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (renderer == nullptr) {
-        SDL_Log("Failed to create renderer: %s", SDL_GetError());
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
+    SDL_Log("Initialization complete. Starting game loop.");
+    game->run();
+    game->cleanup();
 
-    bool running = true;
-    SDL_Event event;
-
-    while (running) {
-        // Close window with any input
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT || event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN) {
-                running = false;
-                break;
-            }
-        }
-
-        SDL_SetRenderDrawColor(renderer, 100, 100, 180, 255); // Set the background color to purple
-        SDL_RenderClear(renderer);
-        SDL_RenderPresent(renderer);
-    }
-
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    SDL_Log("Game exited cleanly.");
     return 0;
 }
