@@ -6,6 +6,7 @@
 #include "player.h"
 #include "bomb.h"
 #include "map.h"
+#include "explosion.h"
 #include <memory> //For smart pointers
 
 //Constants (shared between source files)
@@ -28,6 +29,7 @@ private:
     SDL_Texture* playerTexture; //Texture for Player (owned here)
     SDL_Texture* bombTexture; //Texture for bombs (owned here)
 
+    Explosion explosion;
     Player player;  //Player object
     Map map; //The Map object.
     std::vector<Bomb> bombs; //Vector to store bomb objects

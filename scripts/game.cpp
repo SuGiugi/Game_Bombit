@@ -4,6 +4,7 @@
 #include "map.h"
 #include "resources.h"
 #include "constant.h"
+#include "explosion.h"
 #include <algorithm>
 
 Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(1, 1), map("assets/maps/level1.txt"), playerTexture(nullptr), bombTexture(nullptr) {}
@@ -63,7 +64,7 @@ void Game::run() {
 
         update();
         render();
-        SDL_Delay(10);
+        SDL_Delay(PRESS_DELAY);
     }
 }
 
@@ -102,9 +103,11 @@ void Game::update() {
         if (it->isExploded()) {
             SDL_Log("Bomb exploded at (%d, %d)", it->getX(), it->getY());
             // TODO: implement explosion effects and damage
-            if (player.getX() >= it->getX() - SIZE_EXPLODE || player.getX() <= it->getX() + SIZE_EXPLODE || player.getY() >= it->getY() - SIZE_EXPLODE || player.getY() <= it->getY() + SIZE_EXPLODE)
+            explosion.update(player.getX(), player.getY(), it->getX(), it->getY(), SIZE_EXPLODE);
+            if (explosion.getExplode())
                 {
                     SDL_Log("Die");
+                    cleanup();
                 }
             it = bombs.erase(it);
 
