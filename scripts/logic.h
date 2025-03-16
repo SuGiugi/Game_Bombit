@@ -5,4 +5,12 @@
 #ifndef LOGIC_H
 #define LOGIC_H
 
+class Logic {
+public:
+    int up(double a, double b);
+    int down(double a, double b);
+    float after_mark(float a);
+    double round_2(double a);
+};
+
 #endif //LOGIC_H

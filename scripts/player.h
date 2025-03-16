@@ -3,16 +3,19 @@
 
 class Player {
 public:
-    Player(int startX, int startY);
-    void move(int dx, int dy);
+    Player(float startX, float startY);
+    void move(float dx, float dy);
     int getBombLimit() const; //Added method to retrieve bomb limit.
-    int getX() const;
-    int getY() const;
+    float getX() const;
+    float getY() const;
+    float getSpeed() const { return speed; }
+    void setX(float newX) { x = newX; }
+    void setY(float newY) { y = newY; }
 
 private:
-    int x;
-    int y;
-    int speed;
+    float x;
+    float y;
+    float speed;
     int bombLimit; //Maximum bombs player can place
 };
 

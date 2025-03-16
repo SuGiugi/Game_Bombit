@@ -7,6 +7,7 @@
 #include "bomb.h"
 #include "map.h"
 #include "explosion.h"
+#include "logic.h"
 #include <memory> //For smart pointers
 
 //Constants (shared between source files)
@@ -28,7 +29,9 @@ private:
     bool isRunning;
     SDL_Texture* playerTexture; //Texture for Player (owned here)
     SDL_Texture* bombTexture; //Texture for bombs (owned here)
+    SDL_Texture* mapTexture; //Texture for map(owned here)
 
+    Logic logic;
     Explosion explosion;
     Player player;  //Player object
     Map map; //The Map object.

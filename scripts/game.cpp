@@ -5,9 +5,10 @@
 #include "resources.h"
 #include "constant.h"
 #include "explosion.h"
+#include <cmath>
 #include <algorithm>
 
-Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(1, 1), map("assets/maps/level1.txt"), playerTexture(nullptr), bombTexture(nullptr) {}
+Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(1.2, 1), map("assets/maps/level1.txt"), playerTexture(nullptr), bombTexture(nullptr) {}
 
 bool Game::init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -48,6 +49,13 @@ bool Game::init() {
         return false;
     }
 
+    //Load the map texture
+    mapTexture = loadTexture("assets/images/grass.png", renderer);
+    if (mapTexture == nullptr) {
+        SDL_Log("Failed to load player texture.");
+        return false;
+    }
+
     return true;
 }
 
@@ -70,30 +78,65 @@ void Game::run() {
 
 void Game::handleInput(SDL_Event& event) {
     if (event.type == SDL_KEYDOWN) {
+        float dx = 0.0f;
+        float dy = 0.0f;
+
         switch (event.key.keysym.sym) {
             case SDLK_UP:
-                if (map.limit( player.getX(), player.getY() - 1)) player.move(0, -1);
-                else SDL_Log("Player cant moved up");
+                dy = -1.0f;
                 break;
             case SDLK_DOWN:
-                if (map.limit( player.getX(), player.getY() + 1)) player.move(0, 1);
-                else SDL_Log("Player cant moved down");
+                dy = 1.0f;
                 break;
             case SDLK_LEFT:
-                if (map.limit( player.getX() - 1, player.getY())) player.move(-1, 0);
-                else SDL_Log("Player cant moved left");
+                dx = -1.0f;
                 break;
             case SDLK_RIGHT:
-                if (map.limit( player.getX() + 1, player.getY())) player.move(1, 0);
-                else SDL_Log("Player cant moved right");
+                dx = 1.0f;
                 break;
             case SDLK_SPACE:
-                placeBomb(player.getX(), player.getY());
+                placeBomb(static_cast<int>(player.getX() + FIXED),static_cast<int>(player.getY() + FIXED));
                 break;
             case SDLK_b:
-                placeBomb(player.getX(), player.getY());
+                placeBomb(static_cast<int>(player.getX() + FIXED),static_cast<int>(player.getY() + FIXED));
                 break;
         }
+
+        float newX = player.getX() + dx * player.getSpeed();
+        float newY = player.getY() + dy * player.getSpeed();
+        int limit_x = 0;
+        int limit_y = 0;
+        //MoveY
+        if (dy == -1.0f && logic.down(logic.round_2(player.getY()), 0) != logic.down(logic.round_2(newY), 0)) {
+            limit_y = logic.down(newY, 0);
+            if (!(map.limit(logic.up(logic.round_2(player.getX()),0), limit_y)) || !(map.limit(logic.down(logic.round_2(player.getX()),0), limit_y))) {
+                SDL_Log("Player up attempt failed");
+                newY = player.getY();
+            }
+        }else if (dy == 1.0f && logic.up(logic.round_2(player.getY()), 0) != logic.up(logic.round_2(newY), 0)) {
+            limit_y = logic.up(newY, 0);
+            if (!(map.limit(logic.up(logic.round_2(player.getX()),0), limit_y)) || !(map.limit(logic.down(logic.round_2(player.getX()),0), limit_y))) {
+                SDL_Log("Player up attempt failed");
+                newY = player.getY();
+            }
+        } else if (dx == -1.0f && logic.down(logic.round_2(player.getX()), 0) != logic.down(logic.round_2(newX), 0)) {
+            limit_x = logic.down(newX, 0);
+            if (!(map.limit(limit_x,logic.up(logic.round_2(player.getY()),0))) || !(map.limit(limit_x,logic.down(logic.round_2(player.getY()),0)))) {
+                SDL_Log("Player up attempt failed");
+                newX = player.getX();
+            }
+        }
+        else if (dx == 1.0f && logic.up(logic.round_2(player.getX()), 0) != logic.up(logic.round_2(newX), 0)) {
+            limit_x = logic.up(newX, 0);
+            if (!(map.limit(limit_x,logic.up(logic.round_2(player.getY()),0))) || !(map.limit(limit_x,logic.down(logic.round_2(player.getY()),0)))) {
+                SDL_Log("Player up attempt failed");
+                newX = player.getX();
+            }
+        }
+        SDL_Log("%f %f",newX, newY);
+        player.setX(newX);
+        player.setY(newY);
+
     }
 }
 
@@ -103,7 +146,7 @@ void Game::update() {
         if (it->isExploded()) {
             SDL_Log("Bomb exploded at (%d, %d)", it->getX(), it->getY());
             // TODO: implement explosion effects and damage
-            explosion.update(player.getX(), player.getY(), it->getX(), it->getY(), SIZE_EXPLODE);
+            explosion.update(static_cast<int>(player.getX()),static_cast<int>( player.getY()), it->getX(), it->getY(), SIZE_EXPLODE);
             if (explosion.getExplode())
                 {
                     SDL_Log("Die");
@@ -121,9 +164,9 @@ void Game::render() {
     SDL_RenderClear(renderer);
 
     //Render the Map:
-    map.render(renderer);
+    map.render(renderer, mapTexture);
     // Draw Player:
-    SDL_Rect playerRect = {player.getX() * TILE_SIZE, player.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+    SDL_Rect playerRect = {static_cast<int>(player.getX() * TILE_SIZE),static_cast<int>(player.getY() * TILE_SIZE), TILE_SIZE, TILE_SIZE};
     SDL_RenderCopy(renderer, playerTexture, NULL, &playerRect);
 
     //Draw Bombs:

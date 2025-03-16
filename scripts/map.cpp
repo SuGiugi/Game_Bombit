@@ -25,26 +25,30 @@ bool Map::load(const std::string& filename) {
 
     width = mapData[0].length(); //All rows should be the same length
     height = mapData.size();
-
+    SDL_Log("%d x %d", width, height);
     file.close();
     return true;
 }
 
-void Map::render(SDL_Renderer* renderer) {
+void Map::render(SDL_Renderer* renderer, SDL_Texture* mapTexture) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             SDL_Rect tileRect = {x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE};
             if (mapData[y][x] == '1') {
                 SDL_SetRenderDrawColor(renderer, 0, 0, 10, 255); //black for walls
             } else {
-                SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255); //Gray for empty space
+                //SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255); //Gray for empty space
+                SDL_Rect mapRect = {x * TILE_SIZE,y * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+                SDL_RenderCopy(renderer, mapTexture, NULL, &mapRect);
             }
-            SDL_RenderFillRect(renderer, &tileRect);
+            //SDL_RenderFillRect(renderer, &tileRect);
         }
     }
 }
 
 bool Map::limit(int x, int y) {
-    if (mapData[y][x] == '0') return true;
+    if (mapData[y][x] == '0') {
+        return true;
+    }
     else return false;
 }

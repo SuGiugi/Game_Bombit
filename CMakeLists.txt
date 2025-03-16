@@ -12,6 +12,7 @@ set(SOURCE_FILES
         scripts/explosion.cpp
         scripts/game.cpp
         scripts/resources.cpp
+        scripts/logic.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
