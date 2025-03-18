@@ -4,7 +4,7 @@
 
 #include "constant.h"
 
-Player::Player(float startX, float startY) : x(startX), y(startY), speed(SPEED_PLAYER), bombLimit(1) {}
+Player::Player(float startX, float startY) : x(startX), y(startY), speed(SPEED_PLAYER), bombLimit(2) {}
 
 void Player::move(float dx, float dy) {
     float movementAmountX = speed * dx;

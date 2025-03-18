@@ -8,7 +8,7 @@
 #include <cmath>
 #include <algorithm>
 
-Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(1.2, 1), map("assets/maps/level1.txt"), playerTexture(nullptr), bombTexture(nullptr) {}
+Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(1, 1), map("assets/maps/level1.txt"), playerTexture(nullptr), bombTexture(nullptr) {}
 
 bool Game::init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -50,7 +50,7 @@ bool Game::init() {
     }
 
     //Load the map texture
-    mapTexture = loadTexture("assets/images/grass.png", renderer);
+    mapTexture = loadTexture("assets/images/ground.png", renderer);
     if (mapTexture == nullptr) {
         SDL_Log("Failed to load player texture.");
         return false;
@@ -145,16 +145,26 @@ void Game::update() {
         it->update();
         if (it->isExploded()) {
             SDL_Log("Bomb exploded at (%d, %d)", it->getX(), it->getY());
-            // TODO: implement explosion effects and damage
-            explosion.update(static_cast<int>(player.getX()),static_cast<int>( player.getY()), it->getX(), it->getY(), SIZE_EXPLODE);
-            if (explosion.getExplode())
-                {
-                    SDL_Log("Die");
-                    cleanup();
-                }
+
+            //Create an explosion object here!
+
+            explosions.emplace_back(it->getX(), it->getY(), renderer); //Example radius of 2
+
             it = bombs.erase(it);
 
-        } else {
+        }
+        else {
+            ++it;
+        }
+    }
+
+    //Update Explosions
+    for (auto it = explosions.begin(); it != explosions.end();) {
+        it->update();
+        if (it->isFinished()) {
+            it = explosions.erase(it);
+        }
+        else {
             ++it;
         }
     }
@@ -166,13 +176,17 @@ void Game::render() {
     //Render the Map:
     map.render(renderer, mapTexture);
     // Draw Player:
-    SDL_Rect playerRect = {static_cast<int>(player.getX() * TILE_SIZE),static_cast<int>(player.getY() * TILE_SIZE), TILE_SIZE, TILE_SIZE};
+    SDL_Rect playerRect = { CENTER_X + static_cast<int>(player.getX() * TILE_SIZE),CENTER_Y + static_cast<int>(player.getY() * TILE_SIZE), TILE_SIZE, TILE_SIZE};
     SDL_RenderCopy(renderer, playerTexture, NULL, &playerRect);
 
     //Draw Bombs:
     for (const auto& bomb : bombs) {
-        SDL_Rect bombRect = {bomb.getX() * TILE_SIZE, bomb.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-         SDL_RenderCopy(renderer, bombTexture, NULL, &bombRect);
+        SDL_Rect bombRect = {CENTER_X + bomb.getX() * TILE_SIZE, CENTER_Y + bomb.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+        SDL_RenderCopy(renderer, bombTexture, NULL, &bombRect);
+    }
+
+    for (auto& explosion : explosions) {
+        explosion.render(renderer, player.getX(), player.getY());
     }
 
     SDL_RenderPresent(renderer);

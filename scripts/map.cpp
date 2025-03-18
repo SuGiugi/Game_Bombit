@@ -38,7 +38,7 @@ void Map::render(SDL_Renderer* renderer, SDL_Texture* mapTexture) {
                 SDL_SetRenderDrawColor(renderer, 0, 0, 10, 255); //black for walls
             } else {
                 //SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255); //Gray for empty space
-                SDL_Rect mapRect = {x * TILE_SIZE,y * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+                SDL_Rect mapRect = {CENTER_X + x * TILE_SIZE,CENTER_Y +  y * TILE_SIZE, TILE_SIZE, TILE_SIZE};
                 SDL_RenderCopy(renderer, mapTexture, NULL, &mapRect);
             }
             //SDL_RenderFillRect(renderer, &tileRect);

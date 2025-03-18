@@ -32,10 +32,10 @@ private:
     SDL_Texture* mapTexture; //Texture for map(owned here)
 
     Logic logic;
-    Explosion explosion;
     Player player;  //Player object
     Map map; //The Map object.
     std::vector<Bomb> bombs; //Vector to store bomb objects
+    std::vector<Explosion> explosions; // Store active explosions
 };
 
 #endif
