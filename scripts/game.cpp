@@ -185,15 +185,22 @@ void Game::render() {
     }
 
     for (auto& explosion : explosions) {
+        int current_explosion_X = explosion.get_X();
+        int current_explosion_Y = explosion.get_Y();
+        if ((current_explosion_X ==  logic.up(logic.round_2(player.getX()), 0) || current_explosion_X ==  logic.down(logic.round_2(player.getX()), 0))  && ( current_explosion_Y == logic.up(logic.round_2(player.getY()), 0) || current_explosion_Y == logic.down(logic.round_2(player.getY()), 0)))
+        {SDL_Log("Die");}
         explosion.render(renderer, 0,0);
         for (auto u : position) {
             for (int i = 1; i < 5; i++) {
-                if (map.limit(explosion.get_X()+ u.first*i, explosion.get_Y() + u.second*i) != '0') break;
+                current_explosion_X = explosion.get_X() + u.first * i;
+                current_explosion_Y = explosion.get_Y() + u.second * i;
+                if (map.limit(current_explosion_X, current_explosion_Y) != '0') break;
                 explosion.render(renderer, u.first*i,u.second*i);
+                if ((current_explosion_X ==  logic.up(logic.round_2(player.getX()), 0) || current_explosion_X ==  logic.down(logic.round_2(player.getX()), 0))  && ( current_explosion_Y == logic.up(logic.round_2(player.getY()), 0) || current_explosion_Y == logic.down(logic.round_2(player.getY()), 0)))
+                {SDL_Log("Die");}
             }
-        }
 
-        {SDL_Log("Die");}
+        }
         explosion.update();
     }
 
