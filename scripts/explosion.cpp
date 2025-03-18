@@ -46,6 +46,6 @@ void Explosion::render(SDL_Renderer* renderer, int px, int py) {
     destRect.w = TILE_SIZE;
     destRect.h = TILE_SIZE;
 
-    SDL_RenderCopy(renderer, texture, &explosionRects[currentFrame], &destRect);
+    SDL_RenderCopy(renderer, texture, NULL, &destRect);
 
 }

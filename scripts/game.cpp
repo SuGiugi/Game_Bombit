@@ -160,7 +160,6 @@ void Game::update() {
 
     //Update Explosions
     for (auto it = explosions.begin(); it != explosions.end();) {
-        it->update();
         if (it->isFinished()) {
             it = explosions.erase(it);
         }
@@ -186,12 +185,16 @@ void Game::render() {
     }
 
     for (auto& explosion : explosions) {
+        explosion.render(renderer, 0,0);
         for (auto u : position) {
-            //if (map.limit(u.first*explosion.get_currentFrame(), u.second*explosion.get_currentFrame()) == '0') SDL_Log("return");
-            explosion.render(renderer, u.first*explosion.get_currentFrame(),u.second*explosion.get_currentFrame());
-            if ((explosion.get_X() ==  logic.up(logic.round_2(player.getX()), 0) || explosion.get_X() ==  logic.down(logic.round_2(player.getX()), 0))  && ( explosion.get_Y() == logic.up(logic.round_2(player.getY()), 0) || explosion.get_Y() == logic.down(logic.round_2(player.getY()), 0)))
-                {SDL_Log("Die");}
+            for (int i = 1; i < 5; i++) {
+                if (map.limit(explosion.get_X()+ u.first*i, explosion.get_Y() + u.second*i) != '0') break;
+                explosion.render(renderer, u.first*i,u.second*i);
+            }
         }
+
+        {SDL_Log("Die");}
+        explosion.update();
     }
 
     SDL_RenderPresent(renderer);

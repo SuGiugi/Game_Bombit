@@ -16,17 +16,11 @@ public:
     void render(SDL_Renderer* renderer, int px, int py);
     bool isFinished() const { return finished; }
     int get_currentFrame() const {return currentFrame;};
-    int get_X() const {return explosion_x;};
-    int get_Y() const {return explosion_y;};
+    int get_X() const {return x;};
+    int get_Y() const {return y;};
 
 
 private:
-    std::pair<int, int> position[4] = {
-        std::make_pair(0, 1),
-        std::make_pair(1, 0),
-        std::make_pair(0, -1),
-        std::make_pair(-1, 0)
-    };
     int explosion_x;
     int explosion_y;
     int x;           // Explosion center x (tile coordinates)
