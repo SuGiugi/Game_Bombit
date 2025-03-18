@@ -45,10 +45,6 @@ void Map::render(SDL_Renderer* renderer, SDL_Texture* mapTexture) {
         }
     }
 }
-
-bool Map::limit(int x, int y) {
-    if (mapData[y][x] == '0') {
-        return true;
-    }
-    else return false;
+char Map::limit(int x, int y) {
+    return mapData[y][x];
 }

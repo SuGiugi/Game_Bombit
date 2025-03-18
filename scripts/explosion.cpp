@@ -1,5 +1,4 @@
-#include "explosion.h"
-#include "game.h" //For TILE_SIZE
+#include "explosion.h"//For TILE_SIZE
 #include "resources.h"
 #include "constant.h"
 #include <SDL_image.h> //Texture Loading
@@ -37,16 +36,16 @@ void Explosion::update() {
     }
 }
 
-void Explosion::render(SDL_Renderer* renderer, float px, float py) {
+void Explosion::render(SDL_Renderer* renderer, int px, int py) {
     if (texture == nullptr) return; //Don't try to render if texture failed to load.
     SDL_Rect destRect; //Where to put the explosion frame on screen.
-    for (auto u : position) {
-        destRect.x = (x + currentFrame * u.first) * TILE_SIZE + CENTER_X;
-        destRect.y = (y + currentFrame * u.second) * TILE_SIZE + CENTER_Y;
-        destRect.w = TILE_SIZE;
-        destRect.h = TILE_SIZE;
-        SDL_Log("%d %d %d %d", x + currentFrame * u.first, y + currentFrame * u.second,px,  py  );
-        if ((x + currentFrame * u.first ==  logic.up(px, 0) || x + currentFrame * u.first ==  logic.down(px, 0))  && ( y + currentFrame * u.second == logic.up(py, 0) || y + currentFrame * u.second == logic.down(py, 0))) {SDL_Log("Die");}
-        SDL_RenderCopy(renderer, texture, &explosionRects[currentFrame], &destRect);
-    }
+    explosion_x = x + px;
+    explosion_y = y + py;
+    destRect.x = explosion_x * TILE_SIZE + CENTER_X;
+    destRect.y = explosion_y * TILE_SIZE + CENTER_Y;
+    destRect.w = TILE_SIZE;
+    destRect.h = TILE_SIZE;
+
+    SDL_RenderCopy(renderer, texture, &explosionRects[currentFrame], &destRect);
+
 }

@@ -13,7 +13,7 @@ class Map {
 public:
     Map(const std::string& filename);
     bool load(const std::string& filename);
-    bool limit(int x, int y);
+    char limit(int x, int y);
     void render(SDL_Renderer* renderer, SDL_Texture* mapTexture);
     int getWidth() const { return width; }
     int getHeight() const { return height; }
