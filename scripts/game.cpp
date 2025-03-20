@@ -80,6 +80,9 @@ void Game::handleInput(SDL_Event& event) {
     if (event.type == SDL_KEYDOWN) {
         float dx = 0.0f;
         float dy = 0.0f;
+        int bomb_x = static_cast<int>(logic.round_2(player.getX()) + FIXED);
+        int bomb_y = static_cast<int>(logic.round_2(player.getY()) + FIXED) ;
+
 
         switch (event.key.keysym.sym) {
             case SDLK_UP:
@@ -95,10 +98,16 @@ void Game::handleInput(SDL_Event& event) {
                 dx = 1.0f;
                 break;
             case SDLK_SPACE:
-                placeBomb(static_cast<int>(player.getX() + FIXED),static_cast<int>(player.getY() + FIXED));
+                if (map.limit(bomb_x, bomb_y) == '0') {
+                    map.Create_map('3',bomb_x, bomb_y);
+                    placeBomb(bomb_x,bomb_y);
+                    SDL_Log("%c", map.limit(bomb_x,bomb_y));
+                } else {
+                    SDL_Log("Cant place");
+                }
                 break;
             case SDLK_b:
-                placeBomb(static_cast<int>(player.getX() + FIXED),static_cast<int>(player.getY() + FIXED));
+                placeBomb(bomb_x,bomb_y);
                 break;
         }
 
@@ -147,6 +156,7 @@ void Game::update() {
             SDL_Log("Bomb exploded at (%d, %d)", it->getX(), it->getY());
 
             //Create an explosion object here!
+            map.Create_map('0', it->getX(), it->getY());
 
             explosions.emplace_back(it->getX(), it->getY(), renderer); //Example radius of 2
 
@@ -185,6 +195,7 @@ void Game::render() {
     }
 
     for (auto& explosion : explosions) {
+        explosion.update();
         int current_explosion_X = explosion.get_X();
         int current_explosion_Y = explosion.get_Y();
         if ((current_explosion_X ==  logic.up(logic.round_2(player.getX()), 0) || current_explosion_X ==  logic.down(logic.round_2(player.getX()), 0))  && ( current_explosion_Y == logic.up(logic.round_2(player.getY()), 0) || current_explosion_Y == logic.down(logic.round_2(player.getY()), 0)))
@@ -194,14 +205,19 @@ void Game::render() {
             for (int i = 1; i < 5; i++) {
                 current_explosion_X = explosion.get_X() + u.first * i;
                 current_explosion_Y = explosion.get_Y() + u.second * i;
-                if (map.limit(current_explosion_X, current_explosion_Y) != '0') break;
+                if (map.limit(current_explosion_X, current_explosion_Y) == '2' && explosion.isFinished() == true) {
+                    map.Create_map('0', current_explosion_X, current_explosion_Y);
+                    break;
+                } else if (map.limit(current_explosion_X, current_explosion_Y) != '0') {
+                    break;
+                }
+
                 explosion.render(renderer, u.first*i,u.second*i);
                 if ((current_explosion_X ==  logic.up(logic.round_2(player.getX()), 0) || current_explosion_X ==  logic.down(logic.round_2(player.getX()), 0))  && ( current_explosion_Y == logic.up(logic.round_2(player.getY()), 0) || current_explosion_Y == logic.down(logic.round_2(player.getY()), 0)))
                 {SDL_Log("Die");}
             }
 
         }
-        explosion.update();
     }
 
     SDL_RenderPresent(renderer);

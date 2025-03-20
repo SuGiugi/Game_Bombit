@@ -4,7 +4,7 @@
 #include <SDL_image.h> //Texture Loading
 
 Explosion::Explosion(int x, int y, SDL_Renderer* renderer) :
-    x(x), y(y), timer(60), finished(false), texture(nullptr), currentFrame(0) {
+    x(x), y(y), timer(30), finished(false), texture(nullptr), currentFrame(0) {
     texture = loadTexture("assets/images/player.png", renderer);
     if (texture == nullptr) {
         SDL_Log("Failed to load explosion texture!");

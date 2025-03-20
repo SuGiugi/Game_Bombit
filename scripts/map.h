@@ -15,6 +15,7 @@ public:
     bool load(const std::string& filename);
     char limit(int x, int y);
     void render(SDL_Renderer* renderer, SDL_Texture* mapTexture);
+    void Create_map(char a, int x, int y);
     int getWidth() const { return width; }
     int getHeight() const { return height; }
 
