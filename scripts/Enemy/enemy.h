@@ -11,13 +11,19 @@ public:
     void update();
     void render(SDL_Renderer* renderer);
 
-    float getX() const;
-    float getY() const;
+    double getX() const;
+    double getY() const;
+    double get_dx() const;
+    double get_dy() const;
+    void changeX(double a) {x = a;};
+    void changeY(double a) {y = a;}
 
 private:
-    float x;          // Enemy's x position (pixel coordinates)
-    float y;          // Enemy's y position (pixel coordinates)
-    int speed;          // Enemy's movement speed
+    double dx;
+    double dy;
+    double x;          // Enemy's x position (pixel coordinates)
+    double y;          // Enemy's y position (pixel coordinates)
+    double speed;          // Enemy's movement speed
     SDL_Texture* texture;   // Enemy's texture
     int timer;
 };

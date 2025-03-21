@@ -6,7 +6,7 @@
 #include <ctime>    // For time()
 
 Enemy::Enemy(float startX, float startY, SDL_Renderer* renderer) :
-    x(startX), y(startY), speed(1), texture(nullptr), timer(60) {
+    x(startX), y(startY), speed(SPEED_PLAYER), texture(nullptr), timer(60) {
     texture = loadTexture("assets/images/player.png", renderer);
     if (texture == nullptr) {
         SDL_Log("Failed to load enemy texture!");
@@ -27,41 +27,54 @@ Enemy::~Enemy() {
 }
 
 void Enemy::update() {
+    dx = 0;
+    dy = 0;
     timer--;
     // Simple AI: Move randomly
     if (timer  <= 0) {
-        timer = 60;
+        timer = 30;
         int direction = rand() % 4; //0: Up, 1: Down, 2: Left, 3: Right
 
         switch (direction) {
             case 0:
-                y -= speed;
+                dy = - speed;
             break;
             case 1:
-                y += speed;
+                dy = + speed;
             break;
             case 2:
-                x -= speed;
+                dx = - speed;
             break;
             case 3:
-                x += speed;
+                dx = + speed;
             break;
         }
+        SDL_Log("dx = %f dy = %f",dx,dy);
     }
 }
 
 void Enemy::render(SDL_Renderer* renderer) {
     if (texture) {
-        SDL_Rect destRect = {static_cast<int>(x) * TILE_SIZE + CENTER_X,static_cast<int>(y) * TILE_SIZE + CENTER_Y, TILE_SIZE, TILE_SIZE};
+        SDL_Rect destRect = {static_cast<int>(x * TILE_SIZE) + CENTER_X,static_cast<int>(y * TILE_SIZE) + CENTER_Y, TILE_SIZE, TILE_SIZE};
         SDL_RenderCopy(renderer, texture, NULL, &destRect);
     }
     //SDL_Log("enemies %d %d",static_cast<int>(x), static_cast<int>(y));
 }
 
-float Enemy::getX() const {
+double Enemy::getX() const {
     return x;
 }
 
-float Enemy::getY() const {
+double Enemy::getY() const {
     return y;
 }
+
+double Enemy::get_dx() const {
+    return dx;
+}
+
+double Enemy::get_dy() const {
+    return dy;
+}
+
+

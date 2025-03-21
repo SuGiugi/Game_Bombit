@@ -57,9 +57,9 @@ bool Game::init() {
         return false;
     }
 
-    // enemies.emplace_back(5,5, renderer);
-    // enemies.emplace_back(10,10, renderer);
-    // enemies.emplace_back(15,15, renderer);
+    enemies.emplace_back(5,5, renderer);
+    enemies.emplace_back(10,10, renderer);
+    enemies.emplace_back(15,15, renderer);
     return true;
 }
 
@@ -148,8 +148,17 @@ void Game::update() {
             ++it;
         }
     }
-    for (auto& enemy : enemies) {
+    for (auto &enemy : enemies) {
         enemy.update();
+        if (enemy.get_dx() != enemy.get_dy()) {
+            float newX = enemy.getX() + enemy.get_dx();
+            float newY = enemy.getY() + enemy.get_dy();
+            SDL_Log("Before %f %f", newX, newY);
+            move(enemy.getX(), enemy.getY(), newX, newY,enemy.get_dx(), enemy.get_dy());
+            SDL_Log("%f %f", newX, newY);
+            enemy.changeX(newX);
+            enemy.changeY(newY);
+        }
     }
 }
 
@@ -215,32 +224,33 @@ void Game::move(float current_x, float current_y, float &next_x, float &next_y, 
     int limit_x = 0;
     int limit_y = 0;
     //MoveY
-    if (dy == -1.0f && logic.down(logic.round_2(current_y), 0) != logic.down(logic.round_2(next_y), 0)) {
+    if (dy < 0.0f && logic.down(logic.round_2(current_y), 0) != logic.down(logic.round_2(next_y), 0)) {
         limit_y = logic.down(next_y, 0);
         if (!(map.limit(logic.up(logic.round_2(current_x),0), limit_y) == '0') || !(map.limit(logic.down(logic.round_2(current_x),0), limit_y) == '0')) {
             SDL_Log("Player up attempt failed");
             next_y = current_y;
         }
-    }else if (dy == 1.0f && logic.up(logic.round_2(current_y), 0) != logic.up(logic.round_2(next_y), 0)) {
+    }else if (dy > 0.0f && logic.up(logic.round_2(current_y), 0) != logic.up(logic.round_2(next_y), 0)) {
         limit_y = logic.up(next_y , 0);
         if (!(map.limit(logic.up(logic.round_2(current_x),0), limit_y) == '0') || !(map.limit(logic.down(logic.round_2(current_x),0), limit_y) == '0')) {
             SDL_Log("Player up attempt failed");
             next_y  = current_y;
         }
-    } else if (dx == -1.0f && logic.down(logic.round_2(current_x), 0) != logic.down(logic.round_2(next_x), 0)) {
+    } else if (dx < 0.0f && logic.down(logic.round_2(current_x), 0) != logic.down(logic.round_2(next_x), 0)) {
         limit_x = logic.down(next_x, 0);
         if (!(map.limit(limit_x,logic.up(logic.round_2(current_y),0)) == '0') || !(map.limit(limit_x,logic.down(logic.round_2(current_y),0)) == '0')) {
             SDL_Log("Player up attempt failed");
             next_x = current_x;
         }
     }
-    else if (dx == 1.0f && logic.up(logic.round_2(current_x), 0) != logic.up(logic.round_2(next_x), 0)) {
+    else if (dx > 0.0f && logic.up(logic.round_2(current_x), 0) != logic.up(logic.round_2(next_x), 0)) {
         limit_x = logic.up(next_x, 0);
         if (!(map.limit(limit_x,logic.up(logic.round_2(current_y),0)) == '0') || !(map.limit(limit_x,logic.down(logic.round_2(current_y),0)) == '0')) {
             SDL_Log("Player up attempt failed");
             next_x = current_x;
         }
-    }
+    } else {SDL_Log("DONT CHANGE");}
+
 }
 
 
