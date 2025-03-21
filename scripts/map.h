@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include "player.h"
-#include "resources.h"
+#include "../scripts/render/resources.h"
 
 //Use the TILE_SIZE already defined in game.h
 

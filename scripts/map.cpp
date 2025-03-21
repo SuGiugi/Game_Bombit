@@ -34,7 +34,7 @@ void Map::render(SDL_Renderer* renderer, SDL_Texture* mapTexture) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             SDL_Rect tileRect = {CENTER_X + x * TILE_SIZE,CENTER_Y +  y * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-            if (mapData[y][x] == '1') {
+            if (mapData[y][x] == '1' || mapData[y][x] =='3') {
                 SDL_SetRenderDrawColor(renderer, 0, 0, 10, 255); //black for walls
                 SDL_RenderFillRect(renderer, &tileRect);
             } else if (mapData[y][x] == '2') {

@@ -2,9 +2,10 @@
 #include "player.h"
 #include "bomb.h"
 #include "map.h"
-#include "resources.h"
+#include "../scripts/render/resources.h"
 #include "constant.h"
 #include "explosion.h"
+#include "../scripts/Enemy/enemy.h"
 #include <cmath>
 #include <algorithm>
 
@@ -56,6 +57,9 @@ bool Game::init() {
         return false;
     }
 
+    // enemies.emplace_back(5,5, renderer);
+    // enemies.emplace_back(10,10, renderer);
+    // enemies.emplace_back(15,15, renderer);
     return true;
 }
 
@@ -99,9 +103,7 @@ void Game::handleInput(SDL_Event& event) {
                 break;
             case SDLK_SPACE:
                 if (map.limit(bomb_x, bomb_y) == '0') {
-                    map.Create_map('3',bomb_x, bomb_y);
                     placeBomb(bomb_x,bomb_y);
-                    SDL_Log("%c", map.limit(bomb_x,bomb_y));
                 } else {
                     SDL_Log("Cant place");
                 }
@@ -113,39 +115,9 @@ void Game::handleInput(SDL_Event& event) {
 
         float newX = player.getX() + dx * player.getSpeed();
         float newY = player.getY() + dy * player.getSpeed();
-        int limit_x = 0;
-        int limit_y = 0;
-        //MoveY
-        if (dy == -1.0f && logic.down(logic.round_2(player.getY()), 0) != logic.down(logic.round_2(newY), 0)) {
-            limit_y = logic.down(newY, 0);
-            if (!(map.limit(logic.up(logic.round_2(player.getX()),0), limit_y) == '0') || !(map.limit(logic.down(logic.round_2(player.getX()),0), limit_y) == '0')) {
-                SDL_Log("Player up attempt failed");
-                newY = player.getY();
-            }
-        }else if (dy == 1.0f && logic.up(logic.round_2(player.getY()), 0) != logic.up(logic.round_2(newY), 0)) {
-            limit_y = logic.up(newY, 0);
-            if (!(map.limit(logic.up(logic.round_2(player.getX()),0), limit_y) == '0') || !(map.limit(logic.down(logic.round_2(player.getX()),0), limit_y) == '0')) {
-                SDL_Log("Player up attempt failed");
-                newY = player.getY();
-            }
-        } else if (dx == -1.0f && logic.down(logic.round_2(player.getX()), 0) != logic.down(logic.round_2(newX), 0)) {
-            limit_x = logic.down(newX, 0);
-            if (!(map.limit(limit_x,logic.up(logic.round_2(player.getY()),0)) == '0') || !(map.limit(limit_x,logic.down(logic.round_2(player.getY()),0)) == '0')) {
-                SDL_Log("Player up attempt failed");
-                newX = player.getX();
-            }
-        }
-        else if (dx == 1.0f && logic.up(logic.round_2(player.getX()), 0) != logic.up(logic.round_2(newX), 0)) {
-            limit_x = logic.up(newX, 0);
-            if (!(map.limit(limit_x,logic.up(logic.round_2(player.getY()),0)) == '0') || !(map.limit(limit_x,logic.down(logic.round_2(player.getY()),0)) == '0')) {
-                SDL_Log("Player up attempt failed");
-                newX = player.getX();
-            }
-        }
-        SDL_Log("%f %f",newX, newY);
+        move(player.getX(), player.getY(), newX, newY, dx, dy);
         player.setX(newX);
         player.setY(newY);
-
     }
 }
 
@@ -159,7 +131,6 @@ void Game::update() {
             map.Create_map('0', it->getX(), it->getY());
 
             explosions.emplace_back(it->getX(), it->getY(), renderer); //Example radius of 2
-
             it = bombs.erase(it);
 
         }
@@ -176,6 +147,9 @@ void Game::update() {
         else {
             ++it;
         }
+    }
+    for (auto& enemy : enemies) {
+        enemy.update();
     }
 }
 
@@ -220,15 +194,52 @@ void Game::render() {
         }
     }
 
+    for (auto& enemy : enemies) {
+        enemy.render(renderer);
+    }
+
     SDL_RenderPresent(renderer);
 }
 
 void Game::placeBomb(int x, int y) {
     if (bombs.size() < player.getBombLimit()) {
+        map.Create_map('3',x, y);
         bombs.emplace_back(x, y);
          SDL_Log("Bomb placed at (%d, %d)", x, y);
     } else {
         SDL_Log("Cannot place more bombs!");
+    }
+}
+
+void Game::move(float current_x, float current_y, float &next_x, float &next_y, double dx, double dy) {
+    int limit_x = 0;
+    int limit_y = 0;
+    //MoveY
+    if (dy == -1.0f && logic.down(logic.round_2(current_y), 0) != logic.down(logic.round_2(next_y), 0)) {
+        limit_y = logic.down(next_y, 0);
+        if (!(map.limit(logic.up(logic.round_2(current_x),0), limit_y) == '0') || !(map.limit(logic.down(logic.round_2(current_x),0), limit_y) == '0')) {
+            SDL_Log("Player up attempt failed");
+            next_y = current_y;
+        }
+    }else if (dy == 1.0f && logic.up(logic.round_2(current_y), 0) != logic.up(logic.round_2(next_y), 0)) {
+        limit_y = logic.up(next_y , 0);
+        if (!(map.limit(logic.up(logic.round_2(current_x),0), limit_y) == '0') || !(map.limit(logic.down(logic.round_2(current_x),0), limit_y) == '0')) {
+            SDL_Log("Player up attempt failed");
+            next_y  = current_y;
+        }
+    } else if (dx == -1.0f && logic.down(logic.round_2(current_x), 0) != logic.down(logic.round_2(next_x), 0)) {
+        limit_x = logic.down(next_x, 0);
+        if (!(map.limit(limit_x,logic.up(logic.round_2(current_y),0)) == '0') || !(map.limit(limit_x,logic.down(logic.round_2(current_y),0)) == '0')) {
+            SDL_Log("Player up attempt failed");
+            next_x = current_x;
+        }
+    }
+    else if (dx == 1.0f && logic.up(logic.round_2(current_x), 0) != logic.up(logic.round_2(next_x), 0)) {
+        limit_x = logic.up(next_x, 0);
+        if (!(map.limit(limit_x,logic.up(logic.round_2(current_y),0)) == '0') || !(map.limit(limit_x,logic.down(logic.round_2(current_y),0)) == '0')) {
+            SDL_Log("Player up attempt failed");
+            next_x = current_x;
+        }
     }
 }
 

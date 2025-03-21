@@ -8,6 +8,7 @@
 #include "map.h"
 #include "explosion.h"
 #include "logic.h"
+#include "../scripts/Enemy/enemy.h"
 #include <memory> //For smart pointers
 
 //Constants (shared between source files)
@@ -22,6 +23,7 @@ public:
     void render();
     void cleanup();
     void placeBomb(int x, int y);
+    void move(float current_x, float current_y, float &next_x, float &next_y, double dx, double dy);
 
     std::pair<int, int> position[4] = {
         std::make_pair(0, 1),
@@ -42,6 +44,7 @@ private:
     Map map; //The Map object.
     std::vector<Bomb> bombs; //Vector to store bomb objects
     std::vector<Explosion> explosions; // Store active explosions
+    std::vector<Enemy> enemies;
 };
 
 #endif

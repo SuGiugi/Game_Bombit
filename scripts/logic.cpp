@@ -4,17 +4,17 @@
 #include <cmath>
 #include "logic.h"
 
-int Logic::up(double a, double b) {
+int Logic::up(const double a,const double b) {
     if (a < b) return static_cast<int>(floor(a));
     return static_cast<int>(ceil(a));
 }
 
-int Logic::down(double a, double b) {
+int Logic::down(const double a,const double b) {
     if (a < b) return static_cast<int>(ceil(a));
     return static_cast<int>(floor(a));
 }
 
-float Logic::after_mark(float a) {
+float Logic::after_mark(const float a) {
     return a - static_cast<float>(static_cast<int>(a));
 }
 

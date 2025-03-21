@@ -1,5 +1,5 @@
 #include "explosion.h"//For TILE_SIZE
-#include "resources.h"
+#include "../scripts/render/resources.h"
 #include "constant.h"
 #include <SDL_image.h> //Texture Loading
 

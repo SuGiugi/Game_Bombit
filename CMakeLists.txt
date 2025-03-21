@@ -11,8 +11,11 @@ set(SOURCE_FILES
         scripts/map.cpp
         scripts/explosion.cpp
         scripts/game.cpp
-        scripts/resources.cpp
+        scripts/render/resources.cpp
+        scripts/render/resources.h
         scripts/logic.cpp
+        scripts/Enemy/enemy.cpp
+        scripts/Enemy/enemy.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
@@ -24,7 +27,7 @@ set(SDL2_IMAGE_PATH "SDL2/x86_64-w64-mingw32")
 find_package(SDL2_image REQUIRED)
 
 find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIR})
+include_directories(${SDL2_INCLUDE_DIR} ${SDL2_IMAGE_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES})
 
 target_link_libraries(${CMAKE_PROJECT_NAME} kernel32)

@@ -91,12 +91,12 @@ build CMakeFiles/Bombit.dir/scripts/game.cpp.obj: CXX_COMPILER__Bombit_unscanned
   OBJECT_DIR = CMakeFiles\Bombit.dir
   OBJECT_FILE_DIR = CMakeFiles\Bombit.dir\scripts
 
-build CMakeFiles/Bombit.dir/scripts/resources.cpp.obj: CXX_COMPILER__Bombit_unscanned_Debug C$:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/scripts/resources.cpp || cmake_object_order_depends_target_Bombit
-  DEP_FILE = CMakeFiles\Bombit.dir\scripts\resources.cpp.obj.d
+build CMakeFiles/Bombit.dir/scripts/render/resources.cpp.obj: CXX_COMPILER__Bombit_unscanned_Debug C$:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/scripts/render/resources.cpp || cmake_object_order_depends_target_Bombit
+  DEP_FILE = CMakeFiles\Bombit.dir\scripts\render\resources.cpp.obj.d
   FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
   INCLUDES = -IC:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/include/SDL2
   OBJECT_DIR = CMakeFiles\Bombit.dir
-  OBJECT_FILE_DIR = CMakeFiles\Bombit.dir\scripts
+  OBJECT_FILE_DIR = CMakeFiles\Bombit.dir\scripts\render
 
 build CMakeFiles/Bombit.dir/scripts/logic.cpp.obj: CXX_COMPILER__Bombit_unscanned_Debug C$:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/scripts/logic.cpp || cmake_object_order_depends_target_Bombit
   DEP_FILE = CMakeFiles\Bombit.dir\scripts\logic.cpp.obj.d
@@ -104,6 +104,13 @@ build CMakeFiles/Bombit.dir/scripts/logic.cpp.obj: CXX_COMPILER__Bombit_unscanne
   INCLUDES = -IC:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/include/SDL2
   OBJECT_DIR = CMakeFiles\Bombit.dir
   OBJECT_FILE_DIR = CMakeFiles\Bombit.dir\scripts
+
+build CMakeFiles/Bombit.dir/scripts/Enemy/enemy.cpp.obj: CXX_COMPILER__Bombit_unscanned_Debug C$:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/scripts/Enemy/enemy.cpp || cmake_object_order_depends_target_Bombit
+  DEP_FILE = CMakeFiles\Bombit.dir\scripts\Enemy\enemy.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/include/SDL2
+  OBJECT_DIR = CMakeFiles\Bombit.dir
+  OBJECT_FILE_DIR = CMakeFiles\Bombit.dir\scripts\Enemy
 
 
 # =============================================================================
@@ -113,7 +120,7 @@ build CMakeFiles/Bombit.dir/scripts/logic.cpp.obj: CXX_COMPILER__Bombit_unscanne
 #############################################
 # Link the executable Bombit.exe
 
-build Bombit.exe: CXX_EXECUTABLE_LINKER__Bombit_Debug CMakeFiles/Bombit.dir/scripts/main.cpp.obj CMakeFiles/Bombit.dir/scripts/player.cpp.obj CMakeFiles/Bombit.dir/scripts/bomb.cpp.obj CMakeFiles/Bombit.dir/scripts/map.cpp.obj CMakeFiles/Bombit.dir/scripts/explosion.cpp.obj CMakeFiles/Bombit.dir/scripts/game.cpp.obj CMakeFiles/Bombit.dir/scripts/resources.cpp.obj CMakeFiles/Bombit.dir/scripts/logic.cpp.obj | C$:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/lib/libSDL2main.a C$:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/lib/libSDL2.dll.a C$:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/lib/libSDL2_image.dll.a
+build Bombit.exe: CXX_EXECUTABLE_LINKER__Bombit_Debug CMakeFiles/Bombit.dir/scripts/main.cpp.obj CMakeFiles/Bombit.dir/scripts/player.cpp.obj CMakeFiles/Bombit.dir/scripts/bomb.cpp.obj CMakeFiles/Bombit.dir/scripts/map.cpp.obj CMakeFiles/Bombit.dir/scripts/explosion.cpp.obj CMakeFiles/Bombit.dir/scripts/game.cpp.obj CMakeFiles/Bombit.dir/scripts/render/resources.cpp.obj CMakeFiles/Bombit.dir/scripts/logic.cpp.obj CMakeFiles/Bombit.dir/scripts/Enemy/enemy.cpp.obj | C$:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/lib/libSDL2main.a C$:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/lib/libSDL2.dll.a C$:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/lib/libSDL2_image.dll.a
   FLAGS = -g
   LINK_LIBRARIES = -lmingw32  -mwindows  C:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/lib/libSDL2main.a  C:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/lib/libSDL2.dll.a  C:/Users/Admin/CLionProjects/clion-cmake-sdl2-template/SDL2/x86_64-w64-mingw32/lib/libSDL2_image.dll.a  -lkernel32  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\Bombit.dir
