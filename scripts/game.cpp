@@ -127,7 +127,6 @@ void Game::update() {
         if (it->isExploded()) {
             SDL_Log("Bomb exploded at (%d, %d)", it->getX(), it->getY());
 
-            //Create an explosion object here!
             map.Create_map('0', it->getX(), it->getY());
 
             explosions.emplace_back(it->getX(), it->getY(), renderer); //Example radius of 2
@@ -148,16 +147,17 @@ void Game::update() {
             ++it;
         }
     }
-    for (auto &enemy : enemies) {
-        enemy.update();
-        if (enemy.get_dx() != enemy.get_dy()) {
-            float newX = enemy.getX() + enemy.get_dx();
-            float newY = enemy.getY() + enemy.get_dy();
+    for (auto it = enemies.begin(); it != enemies.end(); ++it) {
+        it->update(); //Use it pointer access
+        if (it->get_dx() != it->get_dy()) {
+            //Use it pointer access
+            float newX = it->getX() + it->get_dx(); //Use it pointer access
+            float newY = it->getY() + it->get_dy(); //Use it pointer access
             SDL_Log("Before %f %f", newX, newY);
-            move(enemy.getX(), enemy.getY(), newX, newY,enemy.get_dx(), enemy.get_dy());
+            move(it->getX(), it->getY(), newX, newY,it->get_dx(), it->get_dy()); //Use it pointer access
             SDL_Log("%f %f", newX, newY);
-            enemy.changeX(newX);
-            enemy.changeY(newY);
+            it->changeX(newX); //Use it pointer access
+            it->changeY(newY); //Use it pointer access
         }
     }
 }
@@ -168,6 +168,7 @@ void Game::render() {
     //Render the Map:
     map.render(renderer, mapTexture);
     // Draw Player:
+    // SDL_Log("%f %f", player.getX(), player.getY());
     SDL_Rect playerRect = { CENTER_X + static_cast<int>(player.getX() * TILE_SIZE),CENTER_Y + static_cast<int>(player.getY() * TILE_SIZE), TILE_SIZE, TILE_SIZE};
     SDL_RenderCopy(renderer, playerTexture, NULL, &playerRect);
 
@@ -181,8 +182,15 @@ void Game::render() {
         explosion.update();
         int current_explosion_X = explosion.get_X();
         int current_explosion_Y = explosion.get_Y();
-        if ((current_explosion_X ==  logic.up(logic.round_2(player.getX()), 0) || current_explosion_X ==  logic.down(logic.round_2(player.getX()), 0))  && ( current_explosion_Y == logic.up(logic.round_2(player.getY()), 0) || current_explosion_Y == logic.down(logic.round_2(player.getY()), 0)))
-        {SDL_Log("Die");}
+        if ((current_explosion_X - logic.round_2(player.getX())) * (current_explosion_X - logic.round_2(player.getX())) + (current_explosion_Y - logic.round_2(player.getY())) * (current_explosion_Y - logic.round_2(player.getY()))  < 1)
+        {SDL_Log("%d", (current_explosion_X - logic.round_2(player.getX())) * (current_explosion_X - logic.round_2(player.getX())) + (current_explosion_Y - logic.round_2(player.getY())) * (current_explosion_Y - logic.round_2(player.getY())));}
+        for (auto it = enemies.begin(); it != enemies.end();) {
+            double enemy_x = it->getX();
+            double enemy_y = it->getY();
+            if ((current_explosion_X - logic.round_2(enemy_x)) * (current_explosion_X - logic.round_2(enemy_x)) + (current_explosion_Y - logic.round_2(enemy_y)) * (current_explosion_Y - logic.round_2(enemy_y))  < 1)
+            {it = enemies.erase(it);}
+            else ++it;
+        }
         explosion.render(renderer, 0,0);
         for (auto u : position) {
             for (int i = 1; i < 5; i++) {
@@ -194,10 +202,16 @@ void Game::render() {
                 } else if (map.limit(current_explosion_X, current_explosion_Y) != '0') {
                     break;
                 }
-
                 explosion.render(renderer, u.first*i,u.second*i);
-                if ((current_explosion_X ==  logic.up(logic.round_2(player.getX()), 0) || current_explosion_X ==  logic.down(logic.round_2(player.getX()), 0))  && ( current_explosion_Y == logic.up(logic.round_2(player.getY()), 0) || current_explosion_Y == logic.down(logic.round_2(player.getY()), 0)))
-                {SDL_Log("Die");}
+                if ((current_explosion_X - logic.round_2(player.getX())) * (current_explosion_X - logic.round_2(player.getX())) + (current_explosion_Y - logic.round_2(player.getY())) * (current_explosion_Y - logic.round_2(player.getY()))  < 1)
+                {SDL_Log("%d %f %f %f",current_explosion_Y,player.getY() ,(current_explosion_X - logic.round_2(player.getX()) + u.first*i) * (current_explosion_X - logic.round_2(player.getX()) + u.first*i), current_explosion_Y - logic.round_2(player.getY()));}
+                for (auto it = enemies.begin(); it != enemies.end();) {
+                    double enemy_x = it->getX();
+                    double enemy_y = it->getY();
+                    if ((current_explosion_X - logic.round_2(enemy_x)) * (current_explosion_X - logic.round_2(enemy_x)) + (current_explosion_Y - logic.round_2(enemy_y)) * (current_explosion_Y - logic.round_2(enemy_y))  < 1)
+                    {it = enemies.erase(it);}
+                    else ++it;
+                }
             }
 
         }
@@ -249,8 +263,7 @@ void Game::move(float current_x, float current_y, float &next_x, float &next_y, 
             SDL_Log("Player up attempt failed");
             next_x = current_x;
         }
-    } else {SDL_Log("DONT CHANGE");}
-
+    }
 }
 
 

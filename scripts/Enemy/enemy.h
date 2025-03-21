@@ -17,8 +17,11 @@ public:
     double get_dy() const;
     void changeX(double a) {x = a;};
     void changeY(double a) {y = a;}
+    bool isDeath() const {return Death;};
+    void Delete() {Death = true;};
 
 private:
+    bool Death;
     double dx;
     double dy;
     double x;          // Enemy's x position (pixel coordinates)

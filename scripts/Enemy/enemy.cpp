@@ -6,7 +6,7 @@
 #include <ctime>    // For time()
 
 Enemy::Enemy(float startX, float startY, SDL_Renderer* renderer) :
-    x(startX), y(startY), speed(SPEED_PLAYER), texture(nullptr), timer(60) {
+    x(startX), y(startY), speed(SPEED_PLAYER), texture(nullptr), timer(60), Death(false) {
     texture = loadTexture("assets/images/player.png", renderer);
     if (texture == nullptr) {
         SDL_Log("Failed to load enemy texture!");

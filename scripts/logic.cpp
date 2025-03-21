@@ -14,9 +14,6 @@ int Logic::down(const double a,const double b) {
     return static_cast<int>(floor(a));
 }
 
-float Logic::after_mark(const float a) {
-    return a - static_cast<float>(static_cast<int>(a));
-}
 
 double Logic::round_2(double a) {
     return round(a*10)/10;
