@@ -9,6 +9,8 @@ class Logic {
 public:
     int up(double a, double b);
     int down(double a, double b);
+    int min(const int &a, const int &b) const {return (a<b?a:b);};
+    int max(const int &a, const int &b) const {return (a>b?a:b);};
     double round_2(double a);
 };
 

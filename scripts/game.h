@@ -23,7 +23,7 @@ public:
     void render();
     void cleanup();
     void placeBomb(int x, int y);
-    void move(float current_x, float current_y, float &next_x, float &next_y, double dx, double dy);
+    void move(const float &current_x,const float &current_y, float &next_x, float &next_y, double dx, double dy);
 
     std::pair<int, int> position[4] = {
         std::make_pair(0, 1),
