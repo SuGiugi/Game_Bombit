@@ -32,12 +32,17 @@ public:
         std::make_pair(-1, 0)
     };
 private:
+    bool walk;
+    int timer;
     SDL_Window* window;
     SDL_Renderer* renderer;
     bool isRunning;
     SDL_Texture* playerTexture; //Texture for Player (owned here)
+    SDL_Texture* player_walk_Texture;
     SDL_Texture* bombTexture; //Texture for bombs (owned here)
     SDL_Texture* mapTexture; //Texture for map(owned here)
+    SDL_Texture* objectTexture;
+    SDL_Texture* rockTexture;
 
     Logic logic;
     Player player;  //Player object

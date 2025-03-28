@@ -30,24 +30,24 @@ bool Map::load(const std::string& filename) {
     return true;
 }
 
-void Map::render(SDL_Renderer* renderer, SDL_Texture* mapTexture) {
+void Map::render(SDL_Renderer* renderer, SDL_Texture* mapTexture, SDL_Texture* objectTexture, SDL_Texture* rockTexture) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             SDL_Rect tileRect = {CENTER_X + x * TILE_SIZE,CENTER_Y +  y * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-            if (mapData[y][x] =='3' || mapData[y][x] == '1') {
-                SDL_SetRenderDrawColor(renderer, 0, 0, 10, 255); //black for walls
-                SDL_RenderFillRect(renderer, &tileRect);
+            SDL_RenderCopy(renderer, mapTexture, NULL, &tileRect);
+            if (mapData[y][x] =='3') {
+                SDL_Rect rock = {7 , 0 , 52, 62};
+                SDL_RenderCopy(renderer,rockTexture, &rock, &tileRect);
             } else if (mapData[y][x] == '2') {
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); //white
-                SDL_RenderFillRect(renderer, &tileRect);
-            }  else {
-                //SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255); //Gray for empty space
-                SDL_RenderCopy(renderer, mapTexture, NULL, &tileRect);
-            }
+                int ran = 1;
+                SDL_Rect tree = {65 * ran , 0 , 65, 80};
+                SDL_RenderCopy(renderer,objectTexture, &tree, &tileRect);
 
+            }
         }
     }
 }
+
 char Map::limit(int x, int y) const {
     return mapData[y][x];
 }

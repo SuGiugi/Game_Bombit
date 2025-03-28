@@ -9,7 +9,7 @@
 #include <cmath>
 #include <algorithm>
 
-Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(8, 6), map("assets/maps/level1.txt"), playerTexture(nullptr), bombTexture(nullptr) {}
+Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(8, 6), map("assets/maps/level1.txt"), playerTexture(nullptr), bombTexture(nullptr), timer(0), walk(false){}
 
 bool Game::init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -38,8 +38,9 @@ bool Game::init() {
     isRunning = true;
 
     //Load the player texture
-    playerTexture = loadTexture("assets/images/player.png", renderer);
-    if (playerTexture == nullptr) {
+    playerTexture = loadTexture("assets/images/player/Slime1_Idle.png", renderer);
+    player_walk_Texture = loadTexture("assets/images/player/Slime1_Walk.png", renderer);
+    if (playerTexture == nullptr || player_walk_Texture == nullptr) {
         SDL_Log("Failed to load player texture.");
         return false;
     }
@@ -51,15 +52,25 @@ bool Game::init() {
     }
 
     //Load the map texture
-    mapTexture = loadTexture("assets/images/ground.png", renderer);
+    mapTexture = loadTexture("assets/images/grass.png", renderer);
     if (mapTexture == nullptr) {
-        SDL_Log("Failed to load player texture.");
+        SDL_Log("Failed to load map texture.");
         return false;
     }
 
-    enemies.emplace_back(2,7, renderer);
-    enemies.emplace_back(15,15, renderer);
-    enemies.emplace_back(1,1, renderer);
+    objectTexture = loadTexture("assets/images/tree2.png", renderer);
+    if (objectTexture == nullptr) {
+        SDL_Log("Failed to load object texture.");
+        return false;
+    }
+    rockTexture = loadTexture("assets/images/rock.png", renderer);
+    if (rockTexture == nullptr) {
+        SDL_Log("Failed to load rock texture.");
+        return false;
+    }
+
+    enemies.emplace_back(9,6, renderer);
+    //enemies.emplace_back(1,1, renderer);
     return true;
 }
 
@@ -76,7 +87,7 @@ void Game::run() {
 
         update();
         render();
-        SDL_Delay(PRESS_DELAY);
+        SDL_Delay(30);
     }
 }
 
@@ -91,15 +102,19 @@ void Game::handleInput(SDL_Event& event) {
         switch (event.key.keysym.sym) {
             case SDLK_UP:
                 dy = -1.0f;
+                if (!walk) player.set_direct(1);
                 break;
             case SDLK_DOWN:
                 dy = 1.0f;
+                if (!walk) player.set_direct(0);
                 break;
             case SDLK_LEFT:
                 dx = -1.0f;
+                if (!walk) player.set_direct(2);
                 break;
             case SDLK_RIGHT:
                 dx = 1.0f;
+                if (!walk) player.set_direct(3);
                 break;
             case SDLK_SPACE:
                 if (map.limit(bomb_x, bomb_y) == '0') {
@@ -112,12 +127,19 @@ void Game::handleInput(SDL_Event& event) {
                 placeBomb(bomb_x,bomb_y);
                 break;
         }
+        if (!walk) {
+            float newX = player.getX() + dx * player.getSpeed();
+            float newY = player.getY() + dy * player.getSpeed();
+            player.set_last_xy(player.getX(), player.getY());
+            move(player.getX(), player.getY(), newX, newY, dx, dy);
+            if ((player.get_last_x() != newX || player.get_last_y() != newY)) {
+                SDL_Log("walk");
+                walk = true;
+                timer = 0;
+                player.setXY(newX, newY);
+            }
+        }
 
-        float newX = player.getX() + dx * player.getSpeed();
-        float newY = player.getY() + dy * player.getSpeed();
-        move(player.getX(), player.getY(), newX, newY, dx, dy);
-        player.setX(newX);
-        player.setY(newY);
     }
 }
 
@@ -148,26 +170,55 @@ void Game::update() {
         }
     }
     for (auto it = enemies.begin(); it != enemies.end();) {
-        it->update(static_cast<int> (player.getX()),static_cast<int> (player.getY()), map); //Use it pointer access
-        if (it->get_dx() != it->get_dy()) {
-            int newX = it->getX() + it->get_dx(); //Use it pointer access
-            int newY = it->getY() + it->get_dy(); //Use it pointer access
-            it->changeX(newX); //Use it pointer access
-            it->changeY(newY); //Use it pointer access
+        it->update(static_cast<int> (logic.round_2(player.getX())),static_cast<int> (logic.round_2(player.getY())), map); //Use it pointer access
+        if (it ->get_skill() == true) {
+            for (auto u : position) {
+                int dx = it->getX() + u.first;
+                int dy = it->getY() + u.second;
+                if (map.limit(dx, dy) == '2') map.Create_map('0', dx, dy);
+            }
         }
         ++it;
     }
 }
 
 void Game::render() {
+    timer++;
     SDL_RenderClear(renderer);
 
     //Render the Map:
-    map.render(renderer, mapTexture);
+    map.render(renderer, mapTexture, objectTexture, rockTexture);
     // Draw Player:
     // SDL_Log("%f %f", player.getX(), player.getY());
-    SDL_Rect playerRect = { CENTER_X + static_cast<int>(player.getX() * TILE_SIZE),CENTER_Y + static_cast<int>(player.getY() * TILE_SIZE), TILE_SIZE, TILE_SIZE};
-    SDL_RenderCopy(renderer, playerTexture, NULL, &playerRect);
+    SDL_Rect playerRect = { CENTER_X + static_cast<int>(player.getX() * TILE_SIZE) - 16,CENTER_Y + static_cast<int>(player.getY() * TILE_SIZE) - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
+    SDL_Rect playerFrame;
+    SDL_Texture* player_sdl;
+    if (!walk) {
+        player_sdl = playerTexture;
+        if (timer >= 30) {
+            timer = 0;
+        }
+        playerFrame = {  64 * static_cast<int>(timer/NUM_FRAME_IDLE),  64 * player.getDirect(), PLAYER_SIZE , PLAYER_SIZE };
+    } else {
+        player_sdl = player_walk_Texture;
+        int frame = timer/(PRESS_DELAY/NUM_FRAME_WALK);
+        float move_frame = frame;
+        if (frame >= NUM_FRAME_WALK) {
+            frame = 0;
+        }
+        playerRect.x = CENTER_X + static_cast<int>((player.get_last_x() + move_frame * (player.getX() - player.get_last_x())/(NUM_FRAME_WALK - 1)) * TILE_SIZE);
+        playerRect.y = CENTER_Y + static_cast<int>((player.get_last_y() + move_frame * (player.getY() - player.get_last_y())/(NUM_FRAME_WALK - 1)) * TILE_SIZE);
+        if (abs(playerRect.x - CENTER_X - player.get_last_x() * TILE_SIZE) > TILE_SIZE) playerRect.x = CENTER_X + player.getX() * TILE_SIZE - 16;
+        else playerRect.x -= 16;;
+        if (abs(playerRect.y - CENTER_Y - player.get_last_y() * TILE_SIZE) > TILE_SIZE) playerRect.y = CENTER_Y + player.getY() * TILE_SIZE - 16;
+        else playerRect.y -= 16;
+        playerFrame = { 64 + 128 * frame, 64 * player.getDirect(), PLAYER_SIZE , PLAYER_SIZE };
+        if (timer >= PRESS_DELAY) {
+            timer = 0;
+            walk = false;
+        }
+    }
+    SDL_RenderCopy(renderer, player_sdl, &playerFrame, &playerRect);
 
     //Draw Bombs:
     for (const auto& bomb : bombs) {
