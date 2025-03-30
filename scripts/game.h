@@ -33,7 +33,6 @@ public:
     };
 private:
     bool walk;
-    int timer;
     SDL_Window* window;
     SDL_Renderer* renderer;
     bool isRunning;

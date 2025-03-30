@@ -22,6 +22,8 @@ public:
     void changeX(double a) {x0 = a;};
     void changeY(double a) {y0 = a;}
     bool is_valid(const Map& map,const int& x,const int& y) const;
+    void Death() {death = 2;};
+    int isDeath() const {return death;};
 
 private:
     struct STATUS {
@@ -33,6 +35,7 @@ private:
         STATUS(SDL_Texture* IMG,const int speed_frame,const int num_frame,const int num_texture,const int size_gap) : IMG(IMG), speed_frame(speed_frame),num_frame(num_frame),num_texture(num_texture),size_gap(size_gap) {};
     };
     bool walk;
+    int death;
     int direct;
     bool use;
     bool cast;
@@ -47,6 +50,7 @@ private:
     double speed;          // Enemy's movement speed
     SDL_Texture* texture;   // Enemy's texture
     SDL_Texture* walk_texture;
+    SDL_Texture* ground_texture;
     SDL_Texture* run_texture;
     SDL_Texture* attack_texture;
     SDL_Texture* dead_texture;

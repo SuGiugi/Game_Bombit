@@ -17,13 +17,16 @@ const int NUM_FRAME_IDLE = 6;
 const int NUM_FRAME_WALK = 8;
 const int NUM_FRAME_ATTACK = 9;
 const int NUM_FRAMES = 5;
+const int NUM_FRAME_DEATH = 10;
 
 //delay - time
 const int TIME_EXPLODE = 150;
-const int PRESS_DELAY = 16;
+const int PRESS_DELAY = 17;
 const int ENEMIES_DELAY = 25;
 const int ENEMIES_SPEED_FRAME = 20;
 const int ENEMIES_ATTACK_SPEED = 25;
+const int ENEMIES_DEATH_SPEED = 40;
+const int PLAYER_WALK_FRAME = 16;
 
 
 //size

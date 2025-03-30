@@ -9,7 +9,7 @@
 #include <cmath>
 #include <algorithm>
 
-Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(8, 6), map("assets/maps/level1.txt"), playerTexture(nullptr), bombTexture(nullptr), timer(0), walk(false){}
+Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(8, 6), map("assets/maps/level1.txt"), playerTexture(nullptr), bombTexture(nullptr), walk(false){}
 
 bool Game::init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -70,7 +70,7 @@ bool Game::init() {
     }
 
     enemies.emplace_back(9,6, renderer);
-    //enemies.emplace_back(1,1, renderer);
+    enemies.emplace_back(1,1, renderer);
     return true;
 }
 
@@ -135,7 +135,7 @@ void Game::handleInput(SDL_Event& event) {
             if ((player.get_last_x() != newX || player.get_last_y() != newY)) {
                 SDL_Log("walk");
                 walk = true;
-                timer = 0;
+                player.set_time();
                 player.setXY(newX, newY);
             }
         }
@@ -178,51 +178,22 @@ void Game::update() {
                 if (map.limit(dx, dy) == '2') map.Create_map('0', dx, dy);
             }
         }
-        ++it;
+        if (it->isDeath() == 3) it = enemies.erase(it);
+        else ++it;
     }
 }
 
 void Game::render() {
-    timer++;
     SDL_RenderClear(renderer);
 
     //Render the Map:
     map.render(renderer, mapTexture, objectTexture, rockTexture);
     // Draw Player:
-    // SDL_Log("%f %f", player.getX(), player.getY());
-    SDL_Rect playerRect = { CENTER_X + static_cast<int>(player.getX() * TILE_SIZE) - 16,CENTER_Y + static_cast<int>(player.getY() * TILE_SIZE) - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
-    SDL_Rect playerFrame;
-    SDL_Texture* player_sdl;
-    if (!walk) {
-        player_sdl = playerTexture;
-        if (timer >= 30) {
-            timer = 0;
-        }
-        playerFrame = {  64 * static_cast<int>(timer/NUM_FRAME_IDLE),  64 * player.getDirect(), PLAYER_SIZE , PLAYER_SIZE };
-    } else {
-        player_sdl = player_walk_Texture;
-        int frame = timer/(PRESS_DELAY/NUM_FRAME_WALK);
-        float move_frame = frame;
-        if (frame >= NUM_FRAME_WALK) {
-            frame = 0;
-        }
-        playerRect.x = CENTER_X + static_cast<int>((player.get_last_x() + move_frame * (player.getX() - player.get_last_x())/(NUM_FRAME_WALK - 1)) * TILE_SIZE);
-        playerRect.y = CENTER_Y + static_cast<int>((player.get_last_y() + move_frame * (player.getY() - player.get_last_y())/(NUM_FRAME_WALK - 1)) * TILE_SIZE);
-        if (abs(playerRect.x - CENTER_X - player.get_last_x() * TILE_SIZE) > TILE_SIZE) playerRect.x = CENTER_X + player.getX() * TILE_SIZE - 16;
-        else playerRect.x -= 16;;
-        if (abs(playerRect.y - CENTER_Y - player.get_last_y() * TILE_SIZE) > TILE_SIZE) playerRect.y = CENTER_Y + player.getY() * TILE_SIZE - 16;
-        else playerRect.y -= 16;
-        playerFrame = { 64 + 128 * frame, 64 * player.getDirect(), PLAYER_SIZE , PLAYER_SIZE };
-        if (timer >= PRESS_DELAY) {
-            timer = 0;
-            walk = false;
-        }
-    }
-    SDL_RenderCopy(renderer, player_sdl, &playerFrame, &playerRect);
+    player.render_player(renderer, playerTexture, player_walk_Texture, walk);
 
     //Draw Bombs:
     for (const auto& bomb : bombs) {
-        SDL_Rect bombRect = {CENTER_X + bomb.getX() * TILE_SIZE, CENTER_Y + bomb.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+        SDL_Rect bombRect = {CENTER_X + bomb.getX() * TILE_SIZE + 3, CENTER_Y + bomb.getY() * TILE_SIZE + 3, TILE_SIZE - 6, TILE_SIZE - 6};
         SDL_RenderCopy(renderer, bombTexture, NULL, &bombRect);
     }
 
@@ -236,8 +207,8 @@ void Game::render() {
             double enemy_x = it->getX();
             double enemy_y = it->getY();
             if ((current_explosion_X - logic.round_2(enemy_x)) * (current_explosion_X - logic.round_2(enemy_x)) + (current_explosion_Y - logic.round_2(enemy_y)) * (current_explosion_Y - logic.round_2(enemy_y))  < 1)
-            {it = enemies.erase(it);}
-            else ++it;
+            {it -> Death();}
+            ++it;
         }
         explosion.render(renderer, 0,0);
         for (auto u : position) {
@@ -256,9 +227,8 @@ void Game::render() {
                 for (auto it = enemies.begin(); it != enemies.end();) {
                     double enemy_x = it->getX();
                     double enemy_y = it->getY();
-                    if ((current_explosion_X - logic.round_2(enemy_x)) * (current_explosion_X - logic.round_2(enemy_x)) + (current_explosion_Y - logic.round_2(enemy_y)) * (current_explosion_Y - logic.round_2(enemy_y))  < 1)
-                    {it = enemies.erase(it);}
-                    else ++it;
+                    if ((current_explosion_X - logic.round_2(enemy_x)) * (current_explosion_X - logic.round_2(enemy_x)) + (current_explosion_Y - logic.round_2(enemy_y)) * (current_explosion_Y - logic.round_2(enemy_y))  < 1) {it->Death();};
+                    ++it;
                 }
             }
 

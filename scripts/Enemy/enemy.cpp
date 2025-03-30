@@ -9,11 +9,12 @@
 #include <queue>
 
 Enemy::Enemy(float X, float Y, SDL_Renderer* renderer) :
-    x0(X), y0(Y), speed(SPEED_PLAYER), texture(nullptr), timer(60), find(1), save(0), time_skill(0), use(false), time_frame(0), walk(false), cast(false) {
+    x0(X), y0(Y), speed(SPEED_PLAYER), texture(nullptr), timer(60), find(1), save(0), time_skill(0), use(false), time_frame(0), walk(false), cast(false), death(0) {
     texture = loadTexture("assets/images/enemies/Slime3_Idle.png", renderer);
     walk_texture = loadTexture("assets/images/enemies/Slime3_Walk.png", renderer);
     attack_texture = loadTexture("assets/images/enemies/Slime3_Attack.png", renderer);
     dead_texture = loadTexture("assets/images/enemies/Slime3_Death.png", renderer);
+    ground_texture = loadTexture("assets/images/enemies/Slime3_Effect.png", renderer);
     if (texture == nullptr) {
         SDL_Log("Failed to load enemy texture!");
          //Don't try to render if we don't have a texture.
@@ -40,7 +41,7 @@ bool Enemy::is_valid(const Map& map,const int& x,const int& y) const {
 void Enemy::update(int target_x, int target_y, const Map& map) {
     timer--;
     time_skill--;
-    if (timer <= 0) {
+    if (timer <= 0 && death == 0) {
         timer = ENEMIES_DELAY;
         int dx[] = {-1, 0, 1, 0};
         int dy[] = {0, -1, 0, 1};
@@ -117,16 +118,23 @@ void Enemy::render(SDL_Renderer* renderer) {
     SDL_Rect enemyRect= {x0 * TILE_SIZE + CENTER_X - 16,y0 * TILE_SIZE + CENTER_Y - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
     int frame;
     STATUS enemy = {texture, ENEMIES_DELAY, NUM_FRAME_IDLE, 0, 1};
-    if (!walk) {
-        if (use) enemy = {attack_texture, ENEMIES_ATTACK_SPEED, NUM_FRAME_ATTACK, 0, 1};
+    if (!walk || death > 0) {
+        if (death == 2) enemy = {dead_texture, ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH, 0, 1};
+        else if (use) enemy = {attack_texture, ENEMIES_ATTACK_SPEED, NUM_FRAME_ATTACK, 0, 1};
         else enemy = {texture, ENEMIES_DELAY, NUM_FRAME_IDLE, 0, 1};
         frame = time_frame/(enemy.speed_frame/enemy.num_frame);
         if (use && frame > NUM_FRAME_ATTACK - 2) cast = true;
         if (frame >= enemy.num_frame) {
             use = false;
             cast = false;
-            time_frame = 0;
-            frame = 0;
+            if (death == 2) {
+                death = 3;
+                frame = 9;
+            }
+            else {
+                frame = 0;
+                time_frame = 0;
+            }
         }
     } else {
         enemy = {walk_texture, ENEMIES_SPEED_FRAME, NUM_FRAME_WALK, 0, 1};
@@ -146,20 +154,21 @@ void Enemy::render(SDL_Renderer* renderer) {
             walk =  false;
         }
     }
+    if (use) {
+        int dx[] = {-1, 0, 1, 0};
+        int dy[] = {0, -1, 0, 1};
+        for (int i = 0; i < 4; i++) {
+            SDL_Rect effect = { CENTER_X + x0 * TILE_SIZE + dx[i] * TILE_SIZE, CENTER_Y + y0 * TILE_SIZE + dy[i] * TILE_SIZE, PLAYER_SIZE/2, PLAYER_SIZE/2 };
+            //SDL_SetRenderDrawColor(renderer, 255, 152, 23, 255);
+            //SDL_RenderFillRect(renderer, &effect);
+            SDL_RenderCopy(renderer, ground_texture, NULL, &effect);
+        }
+    }
     enemy_frame  = { SIZE_TEXTURE_PLAYER * enemy.num_texture + enemy.size_gap * SIZE_TEXTURE_PLAYER * frame,  SIZE_TEXTURE_PLAYER * direct, PLAYER_SIZE , PLAYER_SIZE };
     if (enemy.IMG) {
         SDL_RenderCopy(renderer, enemy.IMG, &enemy_frame, &enemyRect);
     }
-    // if (use) {
-    //     int dx[] = {-1, 0, 1, 0};
-    //     int dy[] = {0, -1, 0, 1};
-    //     enemy_frame = {  SIZE_TEXTURE_PLAYER * 6,  SIZE_TEXTURE_PLAYER * direct, PLAYER_SIZE , PLAYER_SIZE };
-    //     for (int i = 0; i < 4; i++) {
-    //         enemyRect.x = CENTER_X + x0 * TILE_SIZE + dx[i] * TILE_SIZE - 16;
-    //         enemyRect.y = CENTER_Y + y0 * TILE_SIZE + dy[i] * TILE_SIZE - 16;
-    //         SDL_RenderCopy(renderer, dead_texture, &enemy_frame, &enemyRect);
-    //     }
-    // }
+
 }
 
 double Enemy::getX() const {

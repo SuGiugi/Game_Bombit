@@ -16,6 +16,8 @@ set(SOURCE_FILES
         scripts/logic.cpp
         scripts/Enemy/enemy.cpp
         scripts/Enemy/enemy.h
+        scripts/Menu/background.cpp
+        scripts/Menu/background.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
