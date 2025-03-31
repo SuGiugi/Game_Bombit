@@ -13,11 +13,13 @@ public:
     ~Explosion();
 
     void update();
-    void render(SDL_Renderer* renderer, int px, int py);
+    void render(SDL_Renderer* renderer,SDL_Texture*, int px, int py);
     bool isFinished() const { return finished; }
     int get_currentFrame() const {return currentFrame;};
     int get_X() const {return x;};
     int get_Y() const {return y;};
+    bool get_hurt()const {return hurt;};
+    void is_hurt() {hurt = true;};
 
 
 private:
@@ -27,7 +29,7 @@ private:
     int y;           // Explosion center y (tile coordinates)
     int timer;       // Explosion timer (frames)
     bool finished;   // Flag to indicate if the explosion is finished
-    SDL_Texture* texture; //The texture for each "frame" of the explosion.
+    bool hurt = false;
     int currentFrame; //Which frame we are on.
 
     Logic logic;

@@ -66,15 +66,18 @@ void Enemy::update(int target_x, int target_y, const Map& map) {
             else find = 3;
             save = 3;
         }
-
-        while (!is_valid(map,x0 + dx[find],y0 + dy[find])) {
+        int cnt = 0;
+        while (!is_valid(map,x0 + dx[find],y0 + dy[find]) && cnt <= 5) {
             find = (find + 1)%4;
+            cnt++;
         }
-
 
         next_dx = dx[find];
         next_dy = dy[find];
-
+        if (cnt >= 5) {
+            next_dx = 0;
+            next_dy = 0;
+        };
         switch (find) {
             case 0: direct = 2;
             break;

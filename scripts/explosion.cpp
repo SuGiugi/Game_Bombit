@@ -4,13 +4,7 @@
 #include <SDL_image.h> //Texture Loading
 
 Explosion::Explosion(int x, int y, SDL_Renderer* renderer) :
-    x(x), y(y), timer(30), finished(false), texture(nullptr), currentFrame(0) {
-    texture = loadTexture("assets/images/player.png", renderer);
-    if (texture == nullptr) {
-        SDL_Log("Failed to load explosion texture!");
-        finished = true; //Don't try to render if we don't have a texture.
-        return;
-    }
+    x(x), y(y), timer(10), finished(false), currentFrame(0) {
 
     //Set up the explosion rectangle array to define source rectangles from a sprite sheet
     for (int i = 0; i < NUM_FRAMES; i++) {
@@ -36,7 +30,7 @@ void Explosion::update() {
     }
 }
 
-void Explosion::render(SDL_Renderer* renderer, int px, int py) {
+void Explosion::render(SDL_Renderer* renderer,SDL_Texture* texture, int px, int py) {
     if (texture == nullptr) return; //Don't try to render if texture failed to load.
     SDL_Rect destRect; //Where to put the explosion frame on screen.
     explosion_x = x + px;
@@ -46,6 +40,6 @@ void Explosion::render(SDL_Renderer* renderer, int px, int py) {
     destRect.w = TILE_SIZE;
     destRect.h = TILE_SIZE;
 
-    //SDL_RenderCopy(renderer, texture, NULL, &destRect);
+    SDL_RenderCopy(renderer, texture, NULL, &destRect);
 
 }

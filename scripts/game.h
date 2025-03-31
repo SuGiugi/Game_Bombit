@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <vector>
 #include "player.h"
 #include "bomb.h"
@@ -9,6 +10,7 @@
 #include "explosion.h"
 #include "logic.h"
 #include "../scripts/Enemy/enemy.h"
+#include "../scripts/Menu/background.h"
 #include <memory> //For smart pointers
 
 //Constants (shared between source files)
@@ -21,6 +23,7 @@ public:
     void handleInput(SDL_Event& event);
     void update();
     void render();
+    void renderScore();
     void cleanup();
     void placeBomb(int x, int y);
     void move(const float &current_x,const float &current_y, float &next_x, float &next_y, double dx, double dy);
@@ -32,20 +35,32 @@ public:
         std::make_pair(-1, 0)
     };
 private:
+    int score = 0;
     bool walk;
+    bool isRunning;
+
     SDL_Window* window;
     SDL_Renderer* renderer;
-    bool isRunning;
+
     SDL_Texture* playerTexture; //Texture for Player (owned here)
     SDL_Texture* player_walk_Texture;
     SDL_Texture* bombTexture; //Texture for bombs (owned here)
     SDL_Texture* mapTexture; //Texture for map(owned here)
     SDL_Texture* objectTexture;
     SDL_Texture* rockTexture;
+    SDL_Texture* explosionTexture[5];
+    SDL_Texture* player_heartTexture;
+
+    TTF_Font* scoreFont;
+    TTF_Font* menuFont;
+
+    SDL_Color textColor = {255, 255, 255, 255};
+    SDL_Color scoreColor = {255, 240, 133, 255};
 
     Logic logic;
     Player player;  //Player object
     Map map; //The Map object.
+    Background background;
     std::vector<Bomb> bombs; //Vector to store bomb objects
     std::vector<Explosion> explosions; // Store active explosions
     std::vector<Enemy> enemies;

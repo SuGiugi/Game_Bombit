@@ -8,6 +8,7 @@
 #include "../scripts/Enemy/enemy.h"
 #include <cmath>
 #include <algorithm>
+#include <cstring>
 
 Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(8, 6), map("assets/maps/level1.txt"), playerTexture(nullptr), bombTexture(nullptr), walk(false){}
 
@@ -15,7 +16,15 @@ bool Game::init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_Log( "SDL could not initialize! SDL_Error: %s", SDL_GetError() );
         return false;
+    } else SDL_Log("SDL Initialized Successful");
+
+    if (TTF_Init() == -1) {
+        SDL_Log("SDL_ttf could not initialize! SDL_ttf Error: %s", TTF_GetError());
+        return false;
+    } else {
+        SDL_Log("SDL_ttf Initialized Successful");
     }
+
 
     window = SDL_CreateWindow("Bombit!", SDL_WINDOWPOS_UNDEFINED,
                                 SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
@@ -40,7 +49,8 @@ bool Game::init() {
     //Load the player texture
     playerTexture = loadTexture("assets/images/player/Slime1_Idle.png", renderer);
     player_walk_Texture = loadTexture("assets/images/player/Slime1_Walk.png", renderer);
-    if (playerTexture == nullptr || player_walk_Texture == nullptr) {
+    player_heartTexture = loadTexture("assets/images/player/heart.png", renderer);
+    if (playerTexture == nullptr || player_walk_Texture == nullptr || player_heartTexture == nullptr) {
         SDL_Log("Failed to load player texture.");
         return false;
     }
@@ -57,7 +67,6 @@ bool Game::init() {
         SDL_Log("Failed to load map texture.");
         return false;
     }
-
     objectTexture = loadTexture("assets/images/tree2.png", renderer);
     if (objectTexture == nullptr) {
         SDL_Log("Failed to load object texture.");
@@ -68,10 +77,62 @@ bool Game::init() {
         SDL_Log("Failed to load rock texture.");
         return false;
     }
-
+    // add enemies
     enemies.emplace_back(9,6, renderer);
     enemies.emplace_back(1,1, renderer);
+    //Load background;
+    background.load(renderer);
+
+    //Load explosion;
+    for (int i = 0; i < NUM_FRAMES; i++) {
+        std::string c = "assets/images/explosion/" + std::to_string(i + 1) +".png";
+        explosionTexture[i] = loadTexture(c.c_str(), renderer);
+        if (explosionTexture[i] == nullptr) {
+            SDL_Log("Failed to load explosion texture.");
+            return false;
+        }
+    }
+
+    scoreFont = TTF_OpenFont("assets/font/Karma Suture.otf", 24);
+    menuFont = TTF_OpenFont("assets/font/arial.ttf", 36);
+     if (!scoreFont || !menuFont) {
+        SDL_Log("Failed to load font! SDL_ttf Error: %s", TTF_GetError());
+         return false;
+     }
     return true;
+}
+
+void Game::renderScore() {
+    std::string scoreText = "COLLECT: " + std::to_string(score) +"/3";
+
+
+    SDL_Surface* scoreSurface = TTF_RenderText_Solid(scoreFont, scoreText.c_str(), scoreColor);
+    if (!scoreSurface) {
+        SDL_Log("Unable to render score text surface! SDL_ttf Error: %s", TTF_GetError());
+        return;
+    }
+
+    SDL_Texture* scoreTexture = SDL_CreateTextureFromSurface(renderer, scoreSurface);
+    if (!scoreTexture) {
+        SDL_Log("Unable to create score texture! SDL Error: %s", SDL_GetError());
+        SDL_FreeSurface(scoreSurface);
+        return;
+    }
+
+    int textWidth = scoreSurface->w;
+    int textHeight = scoreSurface->h;
+
+    SDL_Rect renderQuad = {
+        SCREEN_WIDTH - textWidth - 15,
+        20,
+        textWidth,
+        textHeight
+    };
+
+    SDL_RenderCopy(renderer, scoreTexture, nullptr, &renderQuad);
+
+    SDL_FreeSurface(scoreSurface);
+    SDL_DestroyTexture(scoreTexture);
 }
 
 void Game::run() {
@@ -133,7 +194,6 @@ void Game::handleInput(SDL_Event& event) {
             player.set_last_xy(player.getX(), player.getY());
             move(player.getX(), player.getY(), newX, newY, dx, dy);
             if ((player.get_last_x() != newX || player.get_last_y() != newY)) {
-                SDL_Log("walk");
                 walk = true;
                 player.set_time();
                 player.setXY(newX, newY);
@@ -178,31 +238,33 @@ void Game::update() {
                 if (map.limit(dx, dy) == '2') map.Create_map('0', dx, dy);
             }
         }
-        if (it->isDeath() == 3) it = enemies.erase(it);
+        if (it->isDeath() == 3) {
+            score++;
+            it = enemies.erase(it);
+        }
         else ++it;
     }
 }
 
 void Game::render() {
     SDL_RenderClear(renderer);
+    background.render(renderer);
 
+    renderScore();
     //Render the Map:
     map.render(renderer, mapTexture, objectTexture, rockTexture);
     // Draw Player:
-    player.render_player(renderer, playerTexture, player_walk_Texture, walk);
+    player.render_player(renderer, playerTexture, player_walk_Texture,player_heartTexture, walk);
 
     //Draw Bombs:
     for (const auto& bomb : bombs) {
         SDL_Rect bombRect = {CENTER_X + bomb.getX() * TILE_SIZE + 3, CENTER_Y + bomb.getY() * TILE_SIZE + 3, TILE_SIZE - 6, TILE_SIZE - 6};
         SDL_RenderCopy(renderer, bombTexture, NULL, &bombRect);
     }
-
     for (auto& explosion : explosions) {
         explosion.update();
         int current_explosion_X = explosion.get_X();
         int current_explosion_Y = explosion.get_Y();
-        if ((current_explosion_X - logic.round_2(player.getX())) * (current_explosion_X - logic.round_2(player.getX())) + (current_explosion_Y - logic.round_2(player.getY())) * (current_explosion_Y - logic.round_2(player.getY()))  < 1)
-        {SDL_Log("%d", (current_explosion_X - logic.round_2(player.getX())) * (current_explosion_X - logic.round_2(player.getX())) + (current_explosion_Y - logic.round_2(player.getY())) * (current_explosion_Y - logic.round_2(player.getY())));}
         for (auto it = enemies.begin(); it != enemies.end();) {
             double enemy_x = it->getX();
             double enemy_y = it->getY();
@@ -210,7 +272,11 @@ void Game::render() {
             {it -> Death();}
             ++it;
         }
-        explosion.render(renderer, 0,0);
+        if ((current_explosion_X - logic.round_2(player.getX())) * (current_explosion_X - logic.round_2(player.getX())) + (current_explosion_Y - logic.round_2(player.getY())) * (current_explosion_Y - logic.round_2(player.getY()))  < 1 && explosion.get_hurt() == false) {
+            player.hurt();
+            explosion.is_hurt();
+        }
+        explosion.render(renderer,explosionTexture[0], 0,0);
         for (auto u : position) {
             for (int i = 1; i < SIZE_EXPLODE; i++) {
                 current_explosion_X = explosion.get_X() + u.first * i;
@@ -218,12 +284,14 @@ void Game::render() {
                 if (map.limit(current_explosion_X, current_explosion_Y) == '2' && explosion.isFinished() == true) {
                     map.Create_map('0', current_explosion_X, current_explosion_Y);
                     break;
-                } else if (map.limit(current_explosion_X, current_explosion_Y) != '0') {
+                } else if (map.limit(current_explosion_X, current_explosion_Y) > '1') {
                     break;
                 }
-                explosion.render(renderer, u.first*i,u.second*i);
-                if ((current_explosion_X - logic.round_2(player.getX())) * (current_explosion_X - logic.round_2(player.getX())) + (current_explosion_Y - logic.round_2(player.getY())) * (current_explosion_Y - logic.round_2(player.getY()))  < 1)
-                {SDL_Log("%d %f %f %f",current_explosion_Y,player.getY() ,(current_explosion_X - logic.round_2(player.getX()) + u.first*i) * (current_explosion_X - logic.round_2(player.getX()) + u.first*i), current_explosion_Y - logic.round_2(player.getY()));}
+                if ((current_explosion_X - logic.round_2(player.getX())) * (current_explosion_X - logic.round_2(player.getX())) + (current_explosion_Y - logic.round_2(player.getY())) * (current_explosion_Y - logic.round_2(player.getY()))  < 1 && explosion.get_hurt() == false) {
+                    player.hurt();
+                    explosion.is_hurt();
+                }
+                explosion.render(renderer,explosionTexture[i], u.first*i,u.second*i);
                 for (auto it = enemies.begin(); it != enemies.end();) {
                     double enemy_x = it->getX();
                     double enemy_y = it->getY();
@@ -241,6 +309,8 @@ void Game::render() {
 
     SDL_RenderPresent(renderer);
 }
+
+
 
 void Game::placeBomb(int x, int y) {
     if (bombs.size() < player.getBombLimit()) {

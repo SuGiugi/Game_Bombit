@@ -50,7 +50,7 @@ find_path(SDL2_TTF_INCLUDE_DIR SDL_ttf.h
         # path suffixes to search inside ENV{SDLDIR}
         include/SDL2 include
         PATHS ${SDL2_TTF_PATH}
-        )
+)
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(VC_LIB_PATH_SUFFIX lib/x64)
@@ -65,7 +65,7 @@ find_library(SDL2_TTF_LIBRARY
         ENV SDL2DIR
         PATH_SUFFIXES lib ${VC_LIB_PATH_SUFFIX}
         PATHS ${SDL2_TTF_PATH}
-        )
+)
 
 if (SDL2_TTF_INCLUDE_DIR AND EXISTS "${SDL2_TTF_INCLUDE_DIR}/SDL_ttf.h")
     file(STRINGS "${SDL2_TTF_INCLUDE_DIR}/SDL_ttf.h" SDL2_TTF_VERSION_MAJOR_LINE REGEX "^#define[ \t]+SDL_TTF_MAJOR_VERSION[ \t]+[0-9]+$")

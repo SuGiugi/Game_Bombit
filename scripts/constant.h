@@ -11,6 +11,7 @@ const int SCREEN_WIDTH  = 900;
 const int SCREEN_HEIGHT = 600;
 const int TILE_SIZE     = 32;
 const int SIZE_TEXTURE_PLAYER = 64;
+const int NUM_BACKGROUND  = 4;
 
 //frame
 const int NUM_FRAME_IDLE = 6;

@@ -17,7 +17,7 @@ void Player::move(float dx, float dy) {
     SDL_Log("Player moved to (%d, %d)", x, y); // Use SDL_Log
 }
 
-void Player::render_player(SDL_Renderer* renderer, SDL_Texture* player_texture, SDL_Texture* player_walk_texture, bool &walk) {
+void Player::render_player(SDL_Renderer* renderer, SDL_Texture* player_texture, SDL_Texture* player_walk_texture,SDL_Texture* heart, bool &walk) {
     timer++;
     SDL_Rect playerRect = { CENTER_X + static_cast<int>(x * TILE_SIZE) - 16,CENTER_Y + static_cast<int>(y * TILE_SIZE) - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
     SDL_Rect player_frame;
@@ -49,8 +49,20 @@ void Player::render_player(SDL_Renderer* renderer, SDL_Texture* player_texture, 
         }
     }
     player_frame  = { SIZE_TEXTURE_PLAYER * player.num_texture + player.size_gap * SIZE_TEXTURE_PLAYER * frame,  SIZE_TEXTURE_PLAYER * direct, PLAYER_SIZE , PLAYER_SIZE };
-    if (walk) SDL_Log("%d %d %d", player_frame.x,player_frame.y, frame);
     SDL_RenderCopy(renderer, player.IMG, &player_frame, &playerRect);
+
+    SDL_Rect rect = {24, 24, 140, 80};
+
+    SDL_SetRenderDrawColor(renderer, 212, 201, 190, 255);
+    SDL_RenderFillRect(renderer, &rect);
+    SDL_SetRenderDrawColor(renderer, 3, 3, 3, 255);
+    SDL_RenderDrawRect(renderer, &rect);
+
+    SDL_Rect status = {0 , 0 , 128, 128};
+    SDL_RenderCopy(renderer, player.IMG, &player_frame, &status);
+    status = {114 , 48, 32, 32};
+    SDL_Rect heart_frame = { 316 - 158 * health, 160, 158,158};
+    SDL_RenderCopy(renderer, heart, &heart_frame, &status);
 };
 
 int Player::getBombLimit() const {
