@@ -7,17 +7,25 @@ set(CMAKE_CXX_STANDARD 20)
 set(SOURCE_FILES
         scripts/main.cpp
         scripts/player.cpp
-        scripts/bomb.cpp
+        scripts/player.h
+        scripts/object/bomb.cpp
+        scripts/object/bomb.h
+        scripts/object/explosion.cpp
+        scripts/object/explosion.h
+        scripts/object/item.cpp
+        scripts/object/item.h
         scripts/map.cpp
-        scripts/explosion.cpp
+        scripts/map.h
         scripts/game.cpp
+        scripts/game.h
         scripts/render/resources.cpp
         scripts/render/resources.h
         scripts/logic.cpp
+        scripts/logic.h
         scripts/Enemy/enemy.cpp
         scripts/Enemy/enemy.h
-        scripts/Menu/background.cpp
-        scripts/Menu/background.h
+        scripts/input/InputHandler.cpp
+        scripts/input/InputHandler.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

@@ -5,15 +5,22 @@
 #include <SDL_ttf.h>
 #include <vector>
 #include "player.h"
-#include "bomb.h"
+#include "../scripts/object/bomb.h"
 #include "map.h"
-#include "explosion.h"
+#include "../scripts/object/explosion.h"
 #include "logic.h"
 #include "../scripts/Enemy/enemy.h"
-#include "../scripts/Menu/background.h"
+#include "../scripts/input/InputHandler.h"
 #include <memory> //For smart pointers
 
 //Constants (shared between source files)
+
+enum class GAME_STATE {
+    MAIN_MENU,
+    PLAYING,
+    PAUSE,
+    GAME_OVER
+};
 
 class Game {
 public:
@@ -26,7 +33,7 @@ public:
     void renderScore();
     void cleanup();
     void placeBomb(int x, int y);
-    void move(const float &current_x,const float &current_y, float &next_x, float &next_y, double dx, double dy);
+
 
     std::pair<int, int> position[4] = {
         std::make_pair(0, 1),
@@ -35,35 +42,43 @@ public:
         std::make_pair(-1, 0)
     };
 private:
-    int score = 0;
-    bool walk;
-    bool isRunning;
+
+    bool loadAssets();
+
+    void handleEvent();
+    void handleGameOverEvents();
+    void handleMainMenuEvents();
+    void handlePauseMenuEvents();
+    void renderGameOver();
 
     SDL_Window* window;
     SDL_Renderer* renderer;
+    InputHandler inputHandler;
 
-    SDL_Texture* playerTexture; //Texture for Player (owned here)
-    SDL_Texture* player_walk_Texture;
-    SDL_Texture* bombTexture; //Texture for bombs (owned here)
-    SDL_Texture* mapTexture; //Texture for map(owned here)
-    SDL_Texture* objectTexture;
-    SDL_Texture* rockTexture;
-    SDL_Texture* explosionTexture[5];
-    SDL_Texture* player_heartTexture;
+    SDL_Texture* GameOverTexture;
+    string explosionTexture[5];
+    string background_Texture;
 
     TTF_Font* scoreFont;
     TTF_Font* menuFont;
 
+
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
     SDL_Color textColor = {255, 255, 255, 255};
     SDL_Color scoreColor = {255, 240, 133, 255};
+
+    GAME_STATE current_state = GAME_STATE::PLAYING;
 
     Logic logic;
     Player player;  //Player object
     Map map; //The Map object.
-    Background background;
     std::vector<Bomb> bombs; //Vector to store bomb objects
     std::vector<Explosion> explosions; // Store active explosions
     std::vector<Enemy> enemies;
+
+    int score = 0;
+    bool isRunning;
+    int mouseX, mouseY;
 };
 
 #endif

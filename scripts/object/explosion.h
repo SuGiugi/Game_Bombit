@@ -3,8 +3,8 @@
 #include <SDL.h>
 #include <utility>
 #include <vector>
-#include "logic.h"
-#include "map.h"
+#include "../logic.h"
+#include "../map.h"
 
 // Add your explosion class definition here
 class Explosion {
@@ -13,7 +13,7 @@ public:
     ~Explosion();
 
     void update();
-    void render(SDL_Renderer* renderer,SDL_Texture*, int px, int py);
+    void render(SDL_Renderer* renderer,string id, int px, int py);
     bool isFinished() const { return finished; }
     int get_currentFrame() const {return currentFrame;};
     int get_X() const {return x;};

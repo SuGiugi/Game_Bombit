@@ -8,18 +8,8 @@
 #include <cmath>
 #include <queue>
 
-Enemy::Enemy(float X, float Y, SDL_Renderer* renderer) :
-    x0(X), y0(Y), speed(SPEED_PLAYER), texture(nullptr), timer(60), find(1), save(0), time_skill(0), use(false), time_frame(0), walk(false), cast(false), death(0) {
-    texture = loadTexture("assets/images/enemies/Slime3_Idle.png", renderer);
-    walk_texture = loadTexture("assets/images/enemies/Slime3_Walk.png", renderer);
-    attack_texture = loadTexture("assets/images/enemies/Slime3_Attack.png", renderer);
-    dead_texture = loadTexture("assets/images/enemies/Slime3_Death.png", renderer);
-    ground_texture = loadTexture("assets/images/enemies/Slime3_Effect.png", renderer);
-    if (texture == nullptr) {
-        SDL_Log("Failed to load enemy texture!");
-         //Don't try to render if we don't have a texture.
-        return;
-    }
+Enemy::Enemy(int X, int Y, SDL_Renderer* renderer) :
+    x0(X), y0(Y), speed(SPEED_PLAYER), texture(nullptr), timer(60), find(1), save(0), time_skill(0), use(false), time_frame(0), walk(false), cast(false), death(0), flip(SDL_FLIP_NONE) {
     //Seed the random number generator (only once)
     static bool seeded = false;
     if(!seeded)
@@ -115,20 +105,21 @@ void Enemy::update(int target_x, int target_y, const Map& map) {
 }
 
 
-void Enemy::render(SDL_Renderer* renderer) {
+void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
     time_frame++;
     SDL_Rect enemy_frame;
     SDL_Rect enemyRect= {x0 * TILE_SIZE + CENTER_X - 16,y0 * TILE_SIZE + CENTER_Y - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
     int frame;
-    STATUS enemy = {texture, ENEMIES_DELAY, NUM_FRAME_IDLE, 0, 1};
+    STATUS enemy = {"enemy", ENEMIES_DELAY, NUM_FRAME_IDLE, 0, 1};
     if (!walk || death > 0) {
-        if (death == 2) enemy = {dead_texture, ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH, 0, 1};
-        else if (use) enemy = {attack_texture, ENEMIES_ATTACK_SPEED, NUM_FRAME_ATTACK, 0, 1};
-        else enemy = {texture, ENEMIES_DELAY, NUM_FRAME_IDLE, 0, 1};
+        if (death == 2) enemy = {"enemy_death", ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH, 0, 1};
+        else if (use) enemy = {"enemy_attack", ENEMIES_ATTACK_SPEED, NUM_FRAME_ATTACK, 0, 1};
         frame = time_frame/(enemy.speed_frame/enemy.num_frame);
         if (use && frame > NUM_FRAME_ATTACK - 2) cast = true;
         if (frame >= enemy.num_frame) {
             use = false;
+            kill = false;
+            hurt = false;
             cast = false;
             if (death == 2) {
                 death = 3;
@@ -140,7 +131,7 @@ void Enemy::render(SDL_Renderer* renderer) {
             }
         }
     } else {
-        enemy = {walk_texture, ENEMIES_SPEED_FRAME, NUM_FRAME_WALK, 0, 1};
+        enemy = {"enemy_walk", ENEMIES_SPEED_FRAME, NUM_FRAME_WALK, 0, 1};
         frame = time_frame/(enemy.speed_frame/enemy.num_frame);
         float move_frame = frame;
         if (frame >= enemy.num_frame) {
@@ -158,19 +149,37 @@ void Enemy::render(SDL_Renderer* renderer) {
         }
     }
     if (use) {
+        if (target_x == x0 && target_y == y0) {
+            kill = true;
+        }
         int dx[] = {-1, 0, 1, 0};
         int dy[] = {0, -1, 0, 1};
         for (int i = 0; i < 4; i++) {
+            if (target_x == x0 + dx[i] && target_y == y0 + dy[i]) {
+                kill = true;
+            }
             SDL_Rect effect = { CENTER_X + x0 * TILE_SIZE + dx[i] * TILE_SIZE, CENTER_Y + y0 * TILE_SIZE + dy[i] * TILE_SIZE, PLAYER_SIZE/2, PLAYER_SIZE/2 };
             //SDL_SetRenderDrawColor(renderer, 255, 152, 23, 255);
             //SDL_RenderFillRect(renderer, &effect);
-            SDL_RenderCopy(renderer, ground_texture, NULL, &effect);
+            textureID = "enemy_effect";
+            Resources::Instance()->render(textureID,
+            effect.x, effect.y,
+            effect.w, effect.h,
+            48,48,
+            renderer, flip);
         }
     }
-    enemy_frame  = { SIZE_TEXTURE_PLAYER * enemy.num_texture + enemy.size_gap * SIZE_TEXTURE_PLAYER * frame,  SIZE_TEXTURE_PLAYER * direct, PLAYER_SIZE , PLAYER_SIZE };
-    if (enemy.IMG) {
-        SDL_RenderCopy(renderer, enemy.IMG, &enemy_frame, &enemyRect);
-    }
+    textureID = enemy.IMG;
+    Resources::Instance()->renderFrame(
+        textureID,
+        enemyRect.x, enemyRect.y,
+        enemyRect.w, enemyRect.h,
+        direct, frame,
+        64, 64,
+        renderer,
+        flip
+        );
+
 
 }
 

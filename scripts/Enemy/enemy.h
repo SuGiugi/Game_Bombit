@@ -5,16 +5,17 @@
 #include "../logic.h"
 #include <vector>
 #include <string>
+using namespace std;
 
 class Map;
 
 class Enemy {
 public:
-    Enemy(float X, float Y, SDL_Renderer* renderer);
+    Enemy(int X, int Y, SDL_Renderer* renderer);
     ~Enemy();
 
     void update(int target_x, int target_y, const Map& map);
-    void render(SDL_Renderer* renderer);
+    void render(SDL_Renderer* renderer, int target_x,int target_y);
 
     double getX() const;
     double getY() const;
@@ -24,16 +25,24 @@ public:
     bool is_valid(const Map& map,const int& x,const int& y) const;
     void Death() {death = 2;};
     int isDeath() const {return death;};
+    bool is_kill() const {return kill;};
+    bool is_hurt() const {return hurt;};
+    void hurt_player() {hurt = true;};
 
 private:
     struct STATUS {
-        SDL_Texture* IMG;
+        string IMG;
         int speed_frame;
         int num_frame;
         int num_texture;
         int size_gap;
-        STATUS(SDL_Texture* IMG,const int speed_frame,const int num_frame,const int num_texture,const int size_gap) : IMG(IMG), speed_frame(speed_frame),num_frame(num_frame),num_texture(num_texture),size_gap(size_gap) {};
+        STATUS(string IMG,const int speed_frame,const int num_frame,const int num_texture,const int size_gap) : IMG(IMG), speed_frame(speed_frame),num_frame(num_frame),num_texture(num_texture),size_gap(size_gap) {};
     };
+
+    string textureID;
+    SDL_RendererFlip flip;
+    bool hurt = false;
+    bool kill = false;
     bool walk;
     int death;
     int direct;

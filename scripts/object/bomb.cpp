@@ -2,7 +2,7 @@
 // Created by Admin on 3/14/2025.
 //
 #include "bomb.h"
-#include "constant.h"
+#include "../constant.h"
 #include <SDL.h>
 
 Bomb::Bomb(int x, int y) : x(x), y(y), timer(TIME_EXPLODE), exploded(false) {}

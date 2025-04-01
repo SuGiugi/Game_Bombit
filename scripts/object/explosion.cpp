@@ -1,7 +1,7 @@
-#include "explosion.h"//For TILE_SIZE
-#include "../scripts/render/resources.h"
-#include "constant.h"
-#include <SDL_image.h> //Texture Loading
+#include "explosion.h"
+#include "../render/resources.h"
+#include "../constant.h"
+#include <../SDL2/SDL_image.h>
 
 Explosion::Explosion(int x, int y, SDL_Renderer* renderer) :
     x(x), y(y), timer(10), finished(false), currentFrame(0) {
@@ -30,8 +30,8 @@ void Explosion::update() {
     }
 }
 
-void Explosion::render(SDL_Renderer* renderer,SDL_Texture* texture, int px, int py) {
-    if (texture == nullptr) return; //Don't try to render if texture failed to load.
+void Explosion::render(SDL_Renderer* renderer,string id, int px, int py) {
+    if (id.empty()) return; //Don't try to render if texture failed to load.
     SDL_Rect destRect; //Where to put the explosion frame on screen.
     explosion_x = x + px;
     explosion_y = y + py;
@@ -40,6 +40,9 @@ void Explosion::render(SDL_Renderer* renderer,SDL_Texture* texture, int px, int 
     destRect.w = TILE_SIZE;
     destRect.h = TILE_SIZE;
 
-    SDL_RenderCopy(renderer, texture, NULL, &destRect);
+    Resources::Instance()->render(id,
+        destRect.x, destRect.y,
+        destRect.w, destRect.h,
+        48, 48, renderer,SDL_FLIP_NONE);
 
 }
