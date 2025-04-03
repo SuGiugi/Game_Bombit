@@ -1,13 +1,13 @@
 #include "enemy.h"
-#include "../map.h"
+#include "../Map/map.h"
 #include "../game.h"
-#include "../constant.h"
-#include "../render/resources.h"
+#include "../Info/constant.h"
+#include "../Render/resources.h"
 #include <cstdlib>  // For rand() and srand()
 #include <ctime>    // For time()
 #include <cmath>
-#include <queue>
 
+// Khoi tao dich
 Enemy::Enemy(int id, int X, int Y, SDL_Renderer* renderer) :
     x0(X), y0(Y), speed(SPEED_PLAYER), texture(nullptr), timer(60), find(1), save(0), time_skill(0), use(false),
     time_frame(0), walk(false), cast(false), death(0), flip(SDL_FLIP_NONE), enemyID(id) {
@@ -15,10 +15,7 @@ Enemy::Enemy(int id, int X, int Y, SDL_Renderer* renderer) :
     static bool seeded = false;
 }
 
-Enemy::~Enemy() {
-    //SDL_DestroyTexture(texture);
-}
-
+// kiem tra dich co di vao duoc hay khong
 bool Enemy::is_valid(const Map& map,const int& x,const int& y) const {
     return (x >= 0) && (x < map.getWidth()) && (y >= 0) && (y < map.getHeight()) &&  (!(map.limit(x, y) == '3'));
 }
@@ -27,12 +24,14 @@ bool Enemy::is_valid(const Map& map,const int& x,const int& y) const {
 void Enemy::update(int target_x, int target_y, Map& map) {
     timer--;
     time_skill--;
+    // cai 4 huong
     int dx[] = {-1, 0, 1, 0};
     int dy[] = {0, -1, 0, 1};
     if (timer <= 0 && death == 0 && use == false) {
         hurt = false;
         cast = false;
         timer = ENEMIES_DELAY[enemyID];
+        // xac dinh goc 1/4 cua nguoi choi theo truc oxy de di chuyen
         double vx = target_x - x0;
         double vy = target_y - y0;
         double distance = hypot(vx, vy);
@@ -54,11 +53,13 @@ void Enemy::update(int target_x, int target_y, Map& map) {
             save = 3;
         }
         int cnt = 0;
+        // kiem tra huong co the di chuyen
         while (!is_valid(map,x0 + dx[find],y0 + dy[find]) && cnt <= 5) {
             find = (find + 1)%4;
             cnt++;
         }
 
+        // xac dinh huong di chuyen de tao texture
         next_dx = dx[find];
         next_dy = dy[find];
         if (cnt >= 5) {
@@ -79,6 +80,7 @@ void Enemy::update(int target_x, int target_y, Map& map) {
         if (find != save) find = (find - 1)%4;
         if (find < 0) find = 4 + find;
 
+        // kiem tra vat can va khoang cach de tung chieu
         if (map.limit(x0 + next_dx, y0 + next_dy) == '2' || distance <= DANGER[enemyID]) {
             if (time_skill < 0) {
                 use = true;
@@ -97,6 +99,7 @@ void Enemy::update(int target_x, int target_y, Map& map) {
         }
     }
 
+    // cast chieu tuy theo loai quai vat
     if (cast) {
         if (enemyID == 1) { //Type 1
             for (int i = 0; i < 4; i++) {
@@ -113,7 +116,7 @@ void Enemy::update(int target_x, int target_y, Map& map) {
                 if (map.limit(p_x, p_y) == '2') map.Create_map('0', p_x, p_y);
                 if (random == 1 && map.limit(p_x, p_y) == '0') map.Create_map('8', p_x, p_y);
             }
-        }  else {
+        }  else { //Type 3
             int p_x = x0 + next_dx;
             int p_y = y0 + next_dy;
             if (map.limit(p_x, p_y) == '2') map.Create_map('0', p_x, p_y);
@@ -124,13 +127,14 @@ void Enemy::update(int target_x, int target_y, Map& map) {
 
 }
 
-
+// render hinh anh
 void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
     time_frame++;
     SDL_Rect enemyRect= {x0 * TILE_SIZE + CENTER_X - 16,y0 * TILE_SIZE + CENTER_Y - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
     int frame;
     string c = "enemy" + to_string(enemyID);
     STATUS enemy = {c, ENEMIES_DELAY[enemyID], NUM_FRAME_IDLE[enemyID]};
+    // xac dinh loai quai vat, dang di hay dung, dang dung chieu hay chet
     if (!walk || death > 0) {
         if (death == 2) enemy = {c + "_death", ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH};
         else if (use) enemy = {c + "_attack", ENEMIES_ATTACK_SPEED[enemyID], NUM_FRAME_ATTACK[enemyID]};
@@ -218,7 +222,6 @@ void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
 
         }
     }
-    if (enemyID == 3) SDL_Log("%d", frame);
     // renderEnemy
     textureID = enemy.IMG;
     Resources::Instance()->renderFrame(
@@ -240,8 +243,6 @@ int Enemy::getY() const {
     return y0;
 }
 
-bool Enemy::get_skill() const {
-    return cast;
-}
+
 
 

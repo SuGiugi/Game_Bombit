@@ -2,16 +2,16 @@
 #define GAME_H
 
 #include <SDL.h>
+#include <SDL_mixer.h>
 #include <SDL_ttf.h>
 #include <vector>
-#include "player.h"
-#include "../scripts/object/bomb.h"
-#include "map.h"
-#include "../scripts/object/explosion.h"
-#include "logic.h"
+#include "../scripts/Player/player.h"
+#include "../scripts/Object/bomb.h"
+#include "../scripts/Map/map.h"
+#include "../scripts/Object/explosion.h"
+#include "../scripts/Info/logic.h"
 #include "../scripts/Enemy/enemy.h"
-#include "../scripts/input/InputHandler.h"
-#include <memory> //For smart pointers
+#include "../scripts/Input/InputHandler.h"
 
 //Constants (shared between source files)
 
@@ -27,9 +27,9 @@ public:
     Game();
     bool init();
     void run();
-    void renderScore();
     void cleanup();
 
+    Mix_Chunk* gPlace = nullptr;
 
     std::pair<int, int> position[4] = {
         std::make_pair(0, 1),
@@ -39,10 +39,12 @@ public:
     };
 private:
 
+    bool loadMedia();
     bool loadAssets();
+    void update();
     void write_status(SDL_Renderer* renderer,const int &number,const int &size) const;
     void resetGame();
-    void update();
+    void renderScore();
     void render();
     void renderTutorial(const int &id);
     void renderGameOver();
@@ -62,6 +64,10 @@ private:
 
     TTF_Font* Font;
 
+    Mix_Music* Music;
+    Mix_Chunk* gHigh;
+    Mix_Chunk* gExplosion = nullptr;
+    Mix_Chunk* gDeath = nullptr;
 
     SDL_RendererFlip flip = SDL_FLIP_NONE;
     SDL_Color textColor = {221, 168, 83, 255};

@@ -1,20 +1,22 @@
 #include "game.h"
-#include "player.h"
-#include "../scripts/object/bomb.h"
-#include "map.h"
-#include "../scripts/render/resources.h"
-#include "constant.h"
-#include "../scripts/object/explosion.h"
+#include "../scripts/Player/player.h"
+#include "../scripts/Object/bomb.h"
+#include "../scripts/Map/map.h"
+#include "../scripts/Render/resources.h"
+#include "../scripts/Info/constant.h"
+#include "../scripts/Object/explosion.h"
 #include "../scripts/Enemy/enemy.h"
 #include <cmath>
 #include <algorithm>
 #include <cstring>
+#include <SDL_image.h>
 
-Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), map("assets/maps/level1.txt"), player(nullptr),
-Font(nullptr), GameOverTexture(nullptr){}
+// Khoi tao thong so
+Game::Game() : window(nullptr), renderer(nullptr), map("assets/maps/level1.txt"), player(nullptr),
+               Font(nullptr), GameOverTexture(nullptr), Music(nullptr), gHigh(nullptr){}
 
-bool Game::init() {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+bool Game::init() { // Khoi tao cua so, hinh anh, am thanh, phong chu
+    if (SDL_Init(SDL_INIT_VIDEO || SDL_INIT_AUDIO) < 0) {
         SDL_Log( "SDL could not initialize! SDL_Error: %s", SDL_GetError() );
         return false;
     } else SDL_Log("SDL Initialized Successful");
@@ -43,19 +45,25 @@ bool Game::init() {
         SDL_Quit();
         return false;
     }
-
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    // Game bat dau chay
     isRunning = true;
 
 
+    //Initialize SDL_mixer
+    if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 8, 2048 ) < 0 )
+    {
+        printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
+        return false;
+    }
 
+    //Load Font
     Font = TTF_OpenFont("assets/font/VCR_OSD_MONO_1.001.ttf", 24);
     if (!Font) {
         SDL_Log("Failed to load font! SDL_ttf Error: %s", TTF_GetError());
          return false;
     }
 
-
+    //Khoi tao hinh anh (img)
     if (!Resources::Instance()->init()) {
         SDL_Log("Resources could not be initialized");
         return false;
@@ -63,14 +71,49 @@ bool Game::init() {
         SDL_Log("Resources initialized Successful");
     }
 
+    // Tao player tai vi tri chinh giua ban do 8 8
     player = new Player(8, 8);
 
+    // Tao hinh anh
     if (!loadAssets()) {
         return false;
     }
-    return true;
 
+    // Tao am thanh
+    if (!loadMedia()) {
+        return false;
+    }
+
+    // Dieu chinh am nhac va bat dau chou nhac
+    Mix_VolumeChunk(gHigh, 128);
+    Mix_VolumeChunk(gPlace, 64);
+    Mix_VolumeChunk(gDeath, 64);
+    Mix_VolumeChunk(gExplosion, 64);
+    Mix_VolumeMusic(20);
+    if (Mix_PlayingMusic() == 0) {
+        Mix_PlayMusic(Music, -1);
+    }
+    return true;
 }
+
+bool Game::loadMedia() {
+    Music = Mix_LoadMUS("assets/sounds/The Fairy Dance.mp3");
+    if (Music == nullptr) {
+        SDL_Log("Failed to load music");
+        return false;
+    }
+    gDeath = Mix_LoadWAV("assets/sounds/Death.wav");
+
+    gHigh = Mix_LoadWAV("assets/sounds/Press.wav");
+    gExplosion = Mix_LoadWAV("assets/sounds/Explosion.wav");
+    gPlace = Mix_LoadWAV("assets/sounds/Place.wav");
+    if (gPlace == nullptr || gHigh == nullptr || gExplosion == nullptr || gDeath == nullptr) {
+        SDL_Log("Failed to load wave");
+        return false;
+    }
+    return true;
+}
+
 
 bool Game::loadAssets() {
     //load player
@@ -212,6 +255,7 @@ bool Game::loadAssets() {
     return true;
 }
 
+// su kien khi GameOver
 void Game::handleGameOverEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -220,19 +264,21 @@ void Game::handleGameOverEvents() {
                 isRunning = false;
             break;
             case SDL_MOUSEBUTTONDOWN:
+                Mix_PlayChannel(-1, gHigh, 0);
                 if (event.button.button == SDL_BUTTON_LEFT) {
                     int mouseX = event.button.x;
                     int mouseY = event.button.y;
                     SDL_Rect GameOver = {275, 125, 350, 350};
                     int buttonWidth = 82;
                     int buttonHeight = 75;
+                    // Nut choi lai
                     SDL_Rect RestartRect = {
                         GameOver.x + 63,
                         GameOver.y + 269,
                         buttonWidth,
                         buttonHeight
                     };
-
+                    // Nut ve MainMenu
                     SDL_Rect MainMenuRect = {
                         GameOver.x + 211,
                         GameOver.y + 269,
@@ -258,7 +304,7 @@ void Game::handleGameOverEvents() {
         }
     }
 }
-
+// su kien khi dang o GameState::MainMenu
 void Game::handleMainMenuEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -267,49 +313,61 @@ void Game::handleMainMenuEvents() {
                 isRunning = false;
             break;
             case SDL_MOUSEBUTTONDOWN:
+                Mix_PlayChannel(-1, gHigh, 0);
                 if (event.button.button == SDL_BUTTON_LEFT) {
                     int mouseX = event.button.x;
                     int mouseY = event.button.y;
 
                     int buttonWidth = 180;
                     int buttonHeight = 55;
-
+                    // Nut Start
                     SDL_Rect EndlessbuttonRect = {
                         502,
                         465,
                         buttonWidth,
                         buttonHeight
                     };
-
+                    // Nut Exit
                     SDL_Rect ExitbuttonRect = {
                         23,32,
                         76, 85
                     };
+                    // Nut Am thanh
                     SDL_Rect musicButtonRect = {
                         791, 401,
                         97, 100
                     };
+                    // Nut huong dan
                     SDL_Rect tutorialButtonRect = {
                         791,274,
                         97, 100
                     };
                     if (mouseX >= EndlessbuttonRect.x && mouseX <= EndlessbuttonRect.x + EndlessbuttonRect.w &&
                         mouseY >= EndlessbuttonRect.y && mouseY <= EndlessbuttonRect.y + EndlessbuttonRect.h) {
+                        // bat dau choi va chon 1 map level bat ky
                         player->Start_game();
                         int random = rand()%NUMBER_LEVEL + 1;
                         map.load("assets/maps/level"+ to_string(random) + ".txt");
                         current_state = GAME_STATE::PLAYING;
                     } else if (mouseX >= ExitbuttonRect.x && mouseX <= ExitbuttonRect.x + ExitbuttonRect.w &&
                         mouseY >= ExitbuttonRect.y && mouseY <= ExitbuttonRect.y + ExitbuttonRect.h) {
+                        // Thoat khoi game
                         isRunning = false;
                     } else if (mouseX >= musicButtonRect.x && mouseX <= musicButtonRect.x + musicButtonRect.w &&
                         mouseY >= musicButtonRect.y && mouseY <= musicButtonRect.y + musicButtonRect.h) {
-                        SDL_Log("tes");
+                        // Tat am thanh nen
+                        if (Mix_PausedMusic() == 1) {
+                            Mix_ResumeMusic();
+                        } else {
+                            Mix_PauseMusic();
+                        }
                         Menu_id = 1 - Menu_id;
                     } else if (mouseX >= tutorialButtonRect.x && mouseX <= tutorialButtonRect.x + tutorialButtonRect.w &&
                         mouseY >= tutorialButtonRect.y && mouseY <= tutorialButtonRect.y + tutorialButtonRect.h) {
+                        // Bat Huong dan
                         tutorial = true;
                     } else {
+                        // Nut tang giam chi so
                         SDL_Rect Button {
                             130, 318,
                             59, 59
@@ -318,10 +376,12 @@ void Game::handleMainMenuEvents() {
                             for (int j = 0; j < 3; j++) {
                                 if (mouseX >= Button.x + 166 * i && mouseX <= Button.x + Button.w + 166 * i &&
                                     mouseY >= Button.y + 74 * j && mouseY <= Button.y + Button.h + 74 * j) {
+                                    // Tuy vao vi tri bam tang giam so khien, so bomb, kich thuoc bomb
                                         player->setup(i, j);
                                 }
                             }
                         }
+                        // lua map (background)
                         Button = {
                             430, 343,
                             40, 80
@@ -346,6 +406,7 @@ void Game::handleMainMenuEvents() {
         }
     }
 }
+// su kien khi pauseGame
 void Game::handlePauseMenuEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -359,21 +420,22 @@ void Game::handlePauseMenuEvents() {
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
+                Mix_PlayChannel(-1, gHigh, 0);
                 if (event.button.button == SDL_BUTTON_LEFT) {
                     int mouseX = event.button.x;
                     int mouseY = event.button.y;
 
-                    int buttonWidth = 82;
-                    int buttonHeight = 75;
-
+                    // Nut choi lai
                     SDL_Rect ResetRect = {
                         275 + 22, 250 + 12,
                         82, 75
                     };
+                    //Nut tiep tuc
                     SDL_Rect ContinueRect = {
                             275 + 130, 250 + 12,
                         82, 75
                     };
+                    //Nut ve MainMenu
                     SDL_Rect MainMenuRect = {
                         275 + 247, 250 + 12,
                         82, 75
@@ -397,7 +459,7 @@ void Game::handlePauseMenuEvents() {
         }
     }
 }
-
+// Su kien khi dang o huong dan
 void Game::handleGameTutorial() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -412,7 +474,9 @@ void Game::handleGameTutorial() {
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
+                Mix_PlayChannel(-1, gHigh, 0);
                 if (event.button.button == SDL_BUTTON_LEFT) {
+                    //Nut tat huong dan
                     int mouseX = event.button.x;
                     int mouseY = event.button.y;
                     SDL_Rect Button_Exit{
@@ -431,11 +495,14 @@ void Game::handleGameTutorial() {
         }
     }
 }
-
+// tai Menu
 void Game::renderMainMenu() {
+    // tai man hinh chinh
     Resources::Instance()->render("MainMenu" + to_string(Menu_id + 1), 0, 0, 900,
         600, 900, 600, renderer, flip);
     int shield, bomb, length;
+
+    // lay thong so nguoi choi truoc khi bat dau
     player->get_status(shield,  length, bomb);
     write_status(renderer, bomb, 0);
     write_status(renderer, shield, 1);
@@ -444,6 +511,7 @@ void Game::renderMainMenu() {
         204, 136, 2304, 1296, renderer, flip );
 }
 
+// viet thong so nguoi choi ra man hinh
 void Game::write_status(SDL_Renderer* renderer,const int &number,const int &size) const {
     int StatusWidth = 107;
     string Text = to_string(number);
@@ -472,16 +540,20 @@ void Game::write_status(SDL_Renderer* renderer,const int &number,const int &size
     SDL_DestroyTexture(statusTexture);
 }
 
+// tai hinh anh khi Pause Game
 void Game::renderPause() {
     SDL_Rect PauseRect = {275 ,250 , 350, 100};
     Resources::Instance()->render("Pause", PauseRect.x, PauseRect.y, PauseRect.w, PauseRect.h, PauseRect.w,PauseRect.h, renderer, flip);
 }
 
+// tai hinh anh huong dan
 void Game::renderTutorial(const int &id) {
     Resources::Instance()->render("Tutorial" + to_string(id), 150, 125, 600, 350, 600, 350, renderer, flip);
 }
 
+// tai hinh anh khi game over
 void Game::renderGameOver() {
+    // tuy vao diem so game over se khac nhau
     SDL_Rect GameOver = {275, 125, 350, 350};
     if (score < 10) {
         Resources::Instance()->render("GameOver_TryBetter", GameOver.x, GameOver.y, GameOver.w, GameOver.h, GameOver.w, GameOver.h, renderer, flip);
@@ -494,6 +566,7 @@ void Game::renderGameOver() {
 
     }
 
+    // tai diem cua nguoi choi ra giua man hinh
     std::string scoreText = std::to_string(score);
 
     SDL_Surface* scoreSurface = TTF_RenderText_Solid(Font, scoreText.c_str(), Color);
@@ -525,7 +598,7 @@ void Game::renderGameOver() {
 }
 
 
-
+// tai diem cua nguoi choi khi dang choi
 void Game::renderScore() {
     int ScoreWidth = 140;
     int ScoreHeight = 260;
@@ -572,6 +645,7 @@ void Game::run() {
     }
 }
 
+//tai lai game
 void Game::resetGame() {
     player->set_direct(0);
     player->setXY(8,8);
@@ -586,6 +660,7 @@ void Game::resetGame() {
     tutorial = 0;
 }
 
+// UPDATE
 void Game::update() {
     switch (current_state) {
         case GAME_STATE::PLAYING:
@@ -594,6 +669,7 @@ void Game::update() {
                 break;
             }
             this->inputHandler.handleEvents(this->isRunning, *this->player, *this, current_state, map, bombs);
+             // tao quai tuy theo diem so cua nguoi choi hien tai
             if (time_EnemySpawn%(TIME_1SECOND/2) == 0) {
                 if (cnt_tutorial == 0) {
                     cnt_tutorial = 1;
@@ -610,6 +686,10 @@ void Game::update() {
                     enemies.emplace_back(2, 1,15,renderer);
                 }
                 if (score >= 20) {
+                    if (cnt_tutorial == 2) {
+                        cnt_tutorial = 3;
+                        tutorial = true;
+                    }
                     enemies.emplace_back(3, 6,1,renderer);
                     enemies.emplace_back(3, 6, 15,renderer);
                 }
@@ -622,13 +702,13 @@ void Game::update() {
                 }
             }
             time_EnemySpawn++;
+            // Update Bombs
             for (auto it = bombs.begin(); it != bombs.end();) {
                 it->update();
                 if (it->isExploded()) {
-                    SDL_Log("Bomb exploded at (%d, %d)", it->getX(), it->getY());
-
+                    // Kiem tra bomb no hay chua
                     map.Create_map('0', it->getX(), it->getY());
-
+                    Mix_PlayChannel(-1, gExplosion, 0);
                     explosions.emplace_back(it->getX(), it->getY(), renderer); //Example radius of 2
                     it = bombs.erase(it);
 
@@ -641,6 +721,7 @@ void Game::update() {
         for (auto it = enemies.begin(); it != enemies.end();) {
             it->update(static_cast<int> (logic.round_2(player->getX())),static_cast<int> (logic.round_2(player->getY())), map); //Use it pointer access
             if (it->isDeath() == 3) {
+                // Kiem tra xem dich chet hay chua + tao vat pham ngau nhien khi chet
                 char a = map.generate_item();
                 if (a != '0') map.Create_map(a, it->getX(), it->getY());
                 score++;
@@ -651,6 +732,7 @@ void Game::update() {
         //Update Explosions
         for (auto it = explosions.begin(); it != explosions.end();) {
             if (it->isFinished()) {
+                // Kiem tra xem vu no da xong hay chua
                 it = explosions.erase(it);
             }
             else {
@@ -677,17 +759,18 @@ void Game::update() {
 
 void Game::render() {
     SDL_RenderClear(renderer);
-    SDL_Rect dest = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+    // Tai background tro choi
     Resources::Instance()->render("background" + to_string(background_Texture),0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 2304, 1296, renderer, flip );
+    // Tai diem nguoi choi
     renderScore();
     //Render the Map:
     map.render(renderer, background_Texture);
-    // Draw Player:
 
     //Draw Bombs:
     for (const auto& bomb : bombs) {
         SDL_Rect bombRect = {CENTER_X + bomb.getX() * TILE_SIZE + 3, CENTER_Y + bomb.getY() * TILE_SIZE + 3, TILE_SIZE - 6, TILE_SIZE - 6};
-        if (bomb.gettime() <= TIME_EXPLODE/4  && bomb.gettime()%15 == 0 ) {
+        // Khi bomb gan no thi nhap nhay
+        if (bomb.gettime() <= TIME_EXPLODE/4  && bomb.gettime()%10 == 0 ) {
             Resources::Instance()->render("bomb2",
             bombRect.x, bombRect.y,
             bombRect.w, bombRect.h,
@@ -699,13 +782,17 @@ void Game::render() {
                 500, 500, renderer, flip);
         }
     }
+    // update vu no
     for (auto& explosion : explosions) {
         explosion.update();
+        // kiem tra xem vu no co cham bat ki thu gi hay khong
         int current_explosion_X = explosion.get_X();
         int current_explosion_Y = explosion.get_Y();
         for (auto it = enemies.begin(); it != enemies.end();) {
-            if (current_explosion_X == it->getX() && current_explosion_Y == it->getY())
-            {it -> Death();}
+            if (current_explosion_X == it->getX() && current_explosion_Y == it->getY()) {
+                if (it -> isDeath() == 0) Mix_PlayChannel(-1, gDeath, 0);
+                it -> Death();
+            }
             ++it;
         }
         if (current_explosion_Y == player->getY() && current_explosion_X == player->getX() && explosion.get_hurt() == false) {
@@ -729,8 +816,10 @@ void Game::render() {
                 }
                 explosion.render(renderer,explosionTexture[i], u.first*i,u.second*i);
                 for (auto it = enemies.begin(); it != enemies.end();) {
-                    if (current_explosion_X == it->getX() && current_explosion_Y == it->getY())
-                    {it -> Death();}
+                    if (current_explosion_X == it->getX() && current_explosion_Y == it->getY()) {
+                        if (it -> isDeath() == 0) Mix_PlayChannel(-1, gDeath, 0);
+                        it -> Death();
+                    }
                     ++it;
                 }
             }
@@ -738,6 +827,7 @@ void Game::render() {
         }
     }
 
+    // render ke dich va kiem tra xem co danh vao nguoi choi hay khong
     for (auto& enemy : enemies) {
         enemy.render(renderer, player->getX(),player->getY());
         if (enemy.is_kill() && !enemy.is_hurt()) {
@@ -746,10 +836,14 @@ void Game::render() {
             enemy.hurt_player();
         }
     }
+    // Draw Player:
     player->render_player(renderer);
-
+    // kiem tra xem nguoi choi da chet hay chua
     if (player->get_health() == 0) {
-        if (player->isDeath() == 0) player->Death(1);
+        if (player->isDeath() == 0) {
+            Mix_PlayChannel(-1, gDeath, 0);
+            player->Death(1);
+        }
         current_state = GAME_STATE::GAME_OVER;
     }
     switch (current_state) {
@@ -763,7 +857,8 @@ void Game::render() {
         case GAME_STATE::PLAYING:
             if (tutorial == true) {
                 if (score < 10) renderTutorial(2);
-                else renderTutorial(3);
+                else if (score < 20) renderTutorial(3);
+                else renderTutorial(4);
             }
         break;
             break;
@@ -781,6 +876,18 @@ void Game::render() {
 
 
 void Game::cleanup() {
+    player->close();
+    Mix_FreeChunk(gDeath);
+    Mix_FreeChunk(gExplosion);
+    Mix_FreeChunk(gPlace);
+    Mix_FreeChunk(gHigh);
+    gHigh = NULL;
+    gDeath = NULL;
+    gPlace = NULL;
+    gExplosion = NULL;
+    Mix_FreeMusic(Music);
+    Music = NULL;
+
     if (this->player) {
         delete player;
         player = nullptr;
@@ -795,5 +902,7 @@ void Game::cleanup() {
         SDL_DestroyWindow(window);
         window = nullptr;
     }
+    IMG_Quit();
+    Mix_Quit();
     SDL_Quit();
 }

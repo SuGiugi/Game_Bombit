@@ -1,15 +1,15 @@
 #include "map.h"
-#include "game.h"
+#include "../game.h"
 #include <fstream>
 #include <SDL.h> //Added for SDL_Log
-#include "player.h"
 #include <cstring>
+#include "../Info/constant.h"
 using namespace std;
 
 Map::Map(const string& filename) {
     if (!load(filename)) SDL_Log("Error loading map: %s", filename.c_str());
 }
-
+// load map tu file asset
 bool Map::load(const string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -29,7 +29,7 @@ bool Map::load(const string& filename) {
     file.close();
     return true;
 }
-
+// render tung o cua map tuy theo id
 void Map::render(SDL_Renderer* renderer, int id) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -51,6 +51,7 @@ void Map::render(SDL_Renderer* renderer, int id) {
                 0,id - 1,
                 65, 80, renderer, SDL_FLIP_NONE);
             } else if ('4' <= mapData[y][x] && mapData[y][x] <= '7') {
+                // load item
                 string c;
                 switch (mapData[y][x]) {
                     case '4':  c = "Item4";
@@ -68,6 +69,7 @@ void Map::render(SDL_Renderer* renderer, int id) {
                                 tileRect.w, tileRect.h,
                                 64, 64, renderer, SDL_FLIP_NONE);
             } else if (mapData[y][x] == '8') {
+                // load poison
                 SDL_SetRenderDrawColor(renderer, 198, 142, 253, 255);
                 SDL_RenderFillRect(renderer, &tileRect);
             } else if (mapData[y][x] == '9') {
@@ -81,6 +83,7 @@ void Map::render(SDL_Renderer* renderer, int id) {
     }
 }
 
+// kiem tra o thu x, y la dinh dang gi
 char Map::limit(int x, int y) const {
     if (mapData[y][x] == '9') {
         return '2';
@@ -88,13 +91,16 @@ char Map::limit(int x, int y) const {
     return mapData[y][x];
 }
 
+// Chuyen doi lai Map
 void Map::Create_map(char a, int x, int y) {
     if (mapData[y][x] == '2' || mapData[y][x] == '9') {
+            //Neu la vat pha duoc thi tao vat pham ngau nhien theo %
            a = generate_item();
     }
     mapData[y][x] = a;
 }
 
+// thao vat pham ngau nhien
 char Map::generate_item() {
     char a = '0';
     int rate = rand()%40;;

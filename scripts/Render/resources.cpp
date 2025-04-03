@@ -6,6 +6,7 @@ using namespace std;
 
 Resources* Resources::instance = nullptr;
 
+// Khoi tao hinh anh (img)
 bool Resources::init() {
     int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
     if (!(IMG_Init(imgFlags) & imgFlags)) {
@@ -16,6 +17,7 @@ bool Resources::init() {
     return true;
 }
 
+// load hinh anh va luu vao theo id
 bool Resources::load(const string &fileName, const string &id, SDL_Renderer *renderer) {
     SDL_Surface* tempSurface = IMG_Load(fileName.c_str());
 
@@ -40,6 +42,7 @@ bool Resources::load(const string &fileName, const string &id, SDL_Renderer *ren
     return true;
 }
 
+// render hinh anh
 void Resources::render(const string &id, int x, int y, int displayWidth, int displayHeight,
                              int frameWidth, int frameHeight,
                           SDL_Renderer *renderer, SDL_RendererFlip flip) {
@@ -58,6 +61,7 @@ void Resources::render(const string &id, int x, int y, int displayWidth, int dis
     SDL_RenderCopyEx(renderer, textureMap[id], &srcRect, &destRect, 0, nullptr, flip);
 }
 
+// render hinh anh co frame
 void Resources::renderFrame(const string& id, int x, int y, int displayWidth, int displayHeight,
                              int currentRow, int currentFrame, int frameWidth, int frameHeight,
                              SDL_Renderer* renderer, SDL_RendererFlip flip) {
@@ -77,6 +81,7 @@ void Resources::renderFrame(const string& id, int x, int y, int displayWidth, in
     SDL_RenderCopyEx(renderer, textureMap[id], &srcRect, &destRect, 0, nullptr, flip);
 }
 
+// xoa cac texture co trong map
 void Resources::clearFromTextureMap(const string& id) {
     if (textureMap.find(id) != textureMap.end()) {
         SDL_DestroyTexture(textureMap[id]);

@@ -1,8 +1,9 @@
 #include "explosion.h"
-#include "../render/resources.h"
-#include "../constant.h"
+#include "../Render/resources.h"
+#include "../Info/constant.h"
 #include <../SDL2/SDL_image.h>
 
+// Khoi tao vu no tai vi tri bom no
 Explosion::Explosion(int x, int y, SDL_Renderer* renderer) :
     x(x), y(y), timer(10), finished(false), currentFrame(0) {
 
@@ -15,10 +16,7 @@ Explosion::Explosion(int x, int y, SDL_Renderer* renderer) :
     }
 }
 
-Explosion::~Explosion() {
-    //SDL_DestroyTexture(texture);
-}
-
+// update Frame cua vu no
 void Explosion::update() {
     timer--;
     if (timer <= 0) {
@@ -30,6 +28,7 @@ void Explosion::update() {
     }
 }
 
+// Dua vao frame de ve vu no
 void Explosion::render(SDL_Renderer* renderer,string id, int px, int py) {
     if (id.empty()) return; //Don't try to render if texture failed to load.
     SDL_Rect destRect; //Where to put the explosion frame on screen.

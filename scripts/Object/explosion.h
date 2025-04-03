@@ -3,14 +3,15 @@
 #include <SDL.h>
 #include <utility>
 #include <vector>
-#include "../logic.h"
-#include "../map.h"
+#include "../Info/logic.h"
+#include "../Map/map.h"
+#include <string>
+using namespace std;
 
 // Add your explosion class definition here
 class Explosion {
 public:
     Explosion(int x, int y, SDL_Renderer* renderer);
-    ~Explosion();
 
     void update();
     void render(SDL_Renderer* renderer,string id, int px, int py);

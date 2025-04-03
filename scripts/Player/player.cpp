@@ -1,18 +1,29 @@
 
 #include "player.h"
-#include "map.h"
-#include "render/resources.h"
+#include "../Map/map.h"
+#include "../Render/resources.h"
 
 #include <chrono>
 #include <SDL.h>  // Required for SDL_Log
+#include <SDL_mixer.h>
 #include <bits/atomic_wait.h>
 
-#include "constant.h"
+#include "../Info/constant.h"
 
+//Tao player
 Player::Player(int startX, int startY) : x(startX), y(startY), speed(SPEED_PLAYER),
 bombLimit(2), direct(0), timer(0), dx(0), dy(0), flip(SDL_FLIP_NONE), last_x(startX), last_y(startY) {
+    Mix_VolumeChunk(gCollect, 64);
+    Mix_VolumeChunk(gOuch, 64);
+    gCollect = Mix_LoadWAV("assets/sounds/Collect.wav");
+    gOuch = Mix_LoadWAV("assets/sounds/Ouch.wav");
     Font = TTF_OpenFont("assets/font/Karma Suture.otf", 24);
+    if (Font == nullptr || gCollect == nullptr) {
+        SDL_Log("Failed to load player");
+    }
 }
+
+// Tai hinh anh
 bool Player::loadTexture(const string &filePath, const string &id, SDL_Renderer* renderer) {
     if (Resources::Instance()->load(filePath, id, renderer)) {
         textureID = id;
@@ -21,12 +32,14 @@ bool Player::loadTexture(const string &filePath, const string &id, SDL_Renderer*
     return false;
 }
 
+// Tai nguoi choi
 void Player::render_player(SDL_Renderer* renderer) {
     time_immortal--;
     timer++;
     SDL_Rect playerRect = { CENTER_X +x * TILE_SIZE - 16,CENTER_Y + y * TILE_SIZE - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
     SDL_Rect player_frame;
     int frame;
+    // Kiem tra xem nguoi choi dang trong trang thai nao
     STATUS player = {"player", PRESS_DELAY, NUM_FRAME_IDLE[0]};
     if (!walk) {
         if (death == 1) player = {"player_death", ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH};
@@ -105,6 +118,7 @@ void Player::render_player(SDL_Renderer* renderer) {
     write_status(renderer, size_explode - 1, 2);
 };
 
+//Viet thong so
 void Player::write_status(SDL_Renderer* renderer,const int &number,const int &size) {
     int StatusWidth = 140;
     int StatusHeight = 260;
@@ -135,8 +149,9 @@ void Player::write_status(SDL_Renderer* renderer,const int &number,const int &si
     SDL_DestroyTexture(statusTexture);
 }
 
+
 void Player::update(const int &direction, const int &next_x, const int &next_y, Map& map) {
-    if (!walk) {
+    if (!walk) {// Neu nguoi choi van dang di chuyen thi khong cap nhat
         direct =  direction;
         dx = next_x;
         dy = next_y;
@@ -148,20 +163,26 @@ void Player::update(const int &direction, const int &next_x, const int &next_y, 
             walk = true;
             timer = 0;
             if (map.limit(x, y) >= '4' && map.limit(x, y) <= '8') {
+                // khi lay duoc vat pham hoac dam vao bai doc
                 switch (map.limit(x,y)) {
                     case '4':
+                        Mix_PlayChannel(-1, gCollect, 0);
                         if (size_explode <= 5) size_explode++;
                     break;
                     case '5':
+                        Mix_PlayChannel(-1, gCollect, 0);
                         heal("");
                         break;
                     case '6':
+                        Mix_PlayChannel(-1, gCollect, 0);
                         shield++;
                         break;
                     case '7':
+                        Mix_PlayChannel(-1, gCollect, 0);
                         if (bombLimit < 5) bombLimit++;
                         break;
                     case '8':
+                        Mix_PlayChannel(-1, gOuch, 0);
                         if (health > 0) health--;
 
                         break;

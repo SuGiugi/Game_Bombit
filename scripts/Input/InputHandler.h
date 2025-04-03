@@ -4,7 +4,7 @@
 
 #ifndef INPUTHANDLER_H
 #define INPUTHANDLER_H
-#include "../player.h"
+#include "../Player/player.h"
 #include <vector>
 
 enum class GAME_STATE;

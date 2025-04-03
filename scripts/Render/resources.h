@@ -3,7 +3,6 @@
 
 #include <SDL.h>
 #include <bits/stdc++.h>
-#include <SDL_ttf.h>
 using namespace std;
 
 class Resources {
@@ -27,8 +26,6 @@ public:
         return textureMap[id];
     }
 private:
-    Resources() {}
-    ~Resources() {}
 
     static Resources* instance;
     map<string, SDL_Texture*> textureMap;

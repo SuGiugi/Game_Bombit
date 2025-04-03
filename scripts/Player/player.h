@@ -3,8 +3,9 @@
 
 #include <SDL.h>
 
-#include "constant.h"
+#include "../Info/constant.h"
 #include <bits/stdc++.h>
+#include <SDL_mixer.h>
 #include <SDL_ttf.h>
 using namespace std;
 
@@ -14,26 +15,31 @@ class Player {
 public:
     Player(int startX, int startY);
     void update(const int &direction, const int &next_x, const int &next_y, Map& map);
+    void Death(const int &a){death = a;};
+    void setXY(const int& newX,const int& newY) { x = newX;  y = newY; }
+    void set_last_xy(const int& newX, const int& newY) { last_x = newX;  last_y = newY; }
+    void set_direct(const int& a) {direct = a;}
+    void render_player(SDL_Renderer* renderer);
+    void set_time() {timer = 0;}
+    void set_time_imortal()  {time_immortal = 30;} // cai thoi gian bat tu
+
     int getBombLimit() const; //Added method to retrieve bomb limit.
     int getX() const;
     int getY() const;
     int get_last_x() const;
     int get_last_y() const;
-    int isDeath()const {return death;};
-    void Death(const int &a){death = a;};
-    void setXY(const int& newX,const int& newY) { x = newX;  y = newY; }
-    void set_last_xy(const int& newX, const int& newY) { last_x = newX;  last_y = newY; }
-    void set_direct(const int& a) {direct = a;};
-    int getDirect() const { return direct; }
-    void render_player(SDL_Renderer* renderer);
-    void set_time() {timer = 0;};
-    void set_time_imortal() {time_immortal = 30;};
-    int get_health() const {return health;};
+    int isDeath()const {return death;}
+    int get_health() const {return health;}
+
+    // cho thong so khien, kich thuoc no, so bom
     void get_status(int &a, int &b, int &c) const {
+
         a = shield;
         b = size_explode;
         c = bombLimit;
     }
+
+    // hoi mau
     void heal(const string &c) {
         if (c == "full") {
             health = 2;
@@ -43,17 +49,21 @@ public:
         }
         if (health < 2) health++;
     };
+
+    // gay sat thuong cho nhan vat
     void hurt(const string &c) {
         if (time_immortal < 0) {
             if (c == "piercing") health--;
             else if (shield > 0) shield --;
             else if (health > 0) {
+                Mix_PlayChannel(-1, gOuch, 0);
                 health--;
                 time_immortal = 30;
             }
         }
 
-    }
+    };
+    //dieu chinh thong so cua nguoi choi ben ngoai MainMenu
     void setup(const int &x, const int &y) {
         switch (y) {
             case 0: if (x == 0 && bombLimit > 1) bombLimit--;
@@ -68,7 +78,18 @@ public:
             default: break;
         }
     }
+
+    // xoa am thanh
+    void close () {
+        Mix_FreeChunk(gOuch);
+        Mix_FreeChunk(gCollect);
+        gOuch = NULL;
+        gCollect = NULL;
+    }
+
     int size() const {return size_explode;};
+
+    // luu thong so sau khi chinh sua
     void Start_game(){
         reset[0] = bombLimit;
         reset[1] = shield;
@@ -105,6 +126,8 @@ private:
     SDL_RendererFlip flip;
     SDL_Color Color = {3, 3, 3, 255};
     TTF_Font* Font;
+    Mix_Chunk* gCollect = nullptr;
+    Mix_Chunk* gOuch = nullptr;
 };
 
 #endif

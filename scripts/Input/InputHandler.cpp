@@ -6,6 +6,7 @@
 
 InputHandler::InputHandler() : mouseButtonDown(false), UpKeyDown(false), DownKeyDown(false), LeftKeyDown(false), RightKeyDown(false), SpaceKeyDown(false) {};
 
+// INPUT
 void InputHandler::handleEvents(bool& running, Player& player, Game& game, GAME_STATE& currentState, Map& map, std::vector<Bomb> &bombs) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -14,7 +15,7 @@ void InputHandler::handleEvents(bool& running, Player& player, Game& game, GAME_
                 running = false;
                 break;
 
-            case SDL_KEYDOWN:
+            case SDL_KEYDOWN: // xac dinh nguoi choi bam nut gi de update
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     // Toggle pause state
                     if (currentState == GAME_STATE::PLAYING) {
@@ -41,6 +42,7 @@ void InputHandler::handleEvents(bool& running, Player& player, Game& game, GAME_
                 }
                 else if (event.key.keysym.sym == SDLK_SPACE && !SpaceKeyDown) {
                     if (map.limit(player.getX(), player.getY()) == '0' && bombs.size() < player.getBombLimit()) {
+                        Mix_PlayChannel(-1, game.gPlace, 0);
                         map.Create_map('1', player.getX(), player.getY());
                         bombs.emplace_back(player.getX(), player.getY());
                     } else {
