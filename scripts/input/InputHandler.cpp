@@ -8,8 +8,6 @@ InputHandler::InputHandler() : mouseButtonDown(false), UpKeyDown(false), DownKey
 
 void InputHandler::handleEvents(bool& running, Player& player, Game& game, GAME_STATE& currentState, Map& map, std::vector<Bomb> &bombs) {
     SDL_Event event;
-    int mouseX, mouseY;
-    SDL_GetMouseState(&mouseX, &mouseY);
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
             case SDL_QUIT:

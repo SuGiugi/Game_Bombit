@@ -11,10 +11,10 @@ class Map;
 
 class Enemy {
 public:
-    Enemy(int X, int Y, SDL_Renderer* renderer);
+    Enemy(int id, int X, int Y, SDL_Renderer* renderer);
     ~Enemy();
 
-    void update(int target_x, int target_y, const Map& map);
+    void update(int target_x, int target_y, Map& map);
     void render(SDL_Renderer* renderer, int target_x,int target_y);
 
     double getX() const;
@@ -34,9 +34,7 @@ private:
         string IMG;
         int speed_frame;
         int num_frame;
-        int num_texture;
-        int size_gap;
-        STATUS(string IMG,const int speed_frame,const int num_frame,const int num_texture,const int size_gap) : IMG(IMG), speed_frame(speed_frame),num_frame(num_frame),num_texture(num_texture),size_gap(size_gap) {};
+        STATUS(string IMG,const int speed_frame,const int num_frame) : IMG(IMG), speed_frame(speed_frame),num_frame(num_frame) {};
     };
 
     string textureID;
@@ -44,6 +42,7 @@ private:
     bool hurt = false;
     bool kill = false;
     bool walk;
+    int enemyID;
     int death;
     int direct;
     bool use;

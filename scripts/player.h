@@ -5,6 +5,7 @@
 
 #include "constant.h"
 #include <bits/stdc++.h>
+#include <SDL_ttf.h>
 using namespace std;
 
 class Map;
@@ -18,18 +19,30 @@ public:
     int getY() const;
     int get_last_x() const;
     int get_last_y() const;
-    float getSpeed() const { return speed; }
-    void setXY(const float& newX,const float& newY) { x = newX;  y = newY; }
-    void set_last_xy(const float& newX, const float& newY) { last_x = newX;  last_y = newY; }
+    int isDeath()const {return death;};
+    void Death(const int &a){death = a;};
+    void setXY(const int& newX,const int& newY) { x = newX;  y = newY; }
+    void set_last_xy(const int& newX, const int& newY) { last_x = newX;  last_y = newY; }
     void set_direct(const int& a) {direct = a;};
     int getDirect() const { return direct; }
     void render_player(SDL_Renderer* renderer);
     void set_time() {timer = 0;};
-    void heal() {
+    int get_health() const {return health;};
+    void heal(const string &c) {
+        if (c == "full") {
+            health = 2;
+        }
         if (health < 2) health++;
     };
     void hurt() {
-        if (health > 0) health--;
+        if (time_immortal < 0) {
+            if (shield > 0) shield --;
+            else if (health > 0) {
+                health--;
+                time_immortal = 30;
+            }
+        }
+
     }
     void increase_explode() {
         if (size_explode <= 5) size_explode++;
@@ -39,19 +52,21 @@ public:
     bool loadTexture(const string &filePath, const string &id, SDL_Renderer* renderer);
 
 private:
+    void write_status(SDL_Renderer* renderer,const int number,const int &size);
     struct STATUS {
         string IMG;
         int speed_frame;
         int num_frame;
-        int num_texture;
-        int size_gap;
-        STATUS(string IMG,const int speed_frame,const int num_frame,const int num_texture,const int size_gap) : IMG(IMG), speed_frame(speed_frame),num_frame(num_frame),num_texture(num_texture),size_gap(size_gap) {};
+        STATUS(string IMG,const int speed_frame,const int num_frame) : IMG(IMG), speed_frame(speed_frame),num_frame(num_frame) {};
     };
+    int death = 0;
     int bombLimit; //Maximum bombs player can place
+    int shield = 0;
     int size_explode = SIZE_EXPLODE;
     int direct;
     int health = 2;
     int timer;
+    int time_immortal = 30;
     int last_x;
     int last_y;
     int x;
@@ -61,6 +76,8 @@ private:
     bool walk = false;
     string textureID;
     SDL_RendererFlip flip;
+    SDL_Color Color = {3, 3, 3, 255};
+    TTF_Font* Font;
 };
 
 #endif

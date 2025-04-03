@@ -10,7 +10,9 @@
 #include "constant.h"
 
 Player::Player(int startX, int startY) : x(startX), y(startY), speed(SPEED_PLAYER),
-bombLimit(2), direct(0), timer(0), dx(0), dy(0), flip(SDL_FLIP_NONE), last_x(startX), last_y(startY) {}
+bombLimit(2), direct(0), timer(0), dx(0), dy(0), flip(SDL_FLIP_NONE), last_x(startX), last_y(startY) {
+    Font = TTF_OpenFont("assets/font/Karma Suture.otf", 24);
+}
 bool Player::loadTexture(const string &filePath, const string &id, SDL_Renderer* renderer) {
     if (Resources::Instance()->load(filePath, id, renderer)) {
         textureID = id;
@@ -20,20 +22,27 @@ bool Player::loadTexture(const string &filePath, const string &id, SDL_Renderer*
 }
 
 void Player::render_player(SDL_Renderer* renderer) {
+    time_immortal--;
     timer++;
-    SDL_Rect playerRect = { CENTER_X + static_cast<int>(x * TILE_SIZE) - 16,CENTER_Y + static_cast<int>(y * TILE_SIZE) - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
+    SDL_Rect playerRect = { CENTER_X +x * TILE_SIZE - 16,CENTER_Y + y * TILE_SIZE - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
     SDL_Rect player_frame;
     int frame;
-    STATUS player = {"player", PRESS_DELAY, NUM_FRAME_IDLE, 0, 1};
+    STATUS player = {"player", PRESS_DELAY, NUM_FRAME_IDLE};
     if (!walk) {
-        player = {"player", PRESS_DELAY, NUM_FRAME_IDLE, 0, 1};
+        if (death == 1) player = {"player_death", ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH};
+            else player = {"player", PRESS_DELAY, NUM_FRAME_IDLE};
         frame = timer/(player.speed_frame/player.num_frame);
         if (frame >= player.num_frame) {
-            timer = 0;
-            frame = 0;
+            if (death == 1) {
+                death = 2;
+                frame = 11;
+            } else {
+                timer = 0;
+                frame = 0;
+            }
         }
     } else {
-        player = {"player_walk", PLAYER_WALK_FRAME, NUM_FRAME_WALK, 0, 1};
+        player = {"player_walk", PLAYER_WALK_FRAME, NUM_FRAME_WALK};
         frame = timer/(player.speed_frame/player.num_frame);
         float move_frame = frame;
         if (frame >= player.num_frame) {
@@ -60,12 +69,17 @@ void Player::render_player(SDL_Renderer* renderer) {
         renderer,
         flip
         );
-    SDL_Rect rect = {24, 24, 140, 80};
 
-    SDL_SetRenderDrawColor(renderer, 212, 201, 190, 255);
-    SDL_RenderFillRect(renderer, &rect);
-    SDL_SetRenderDrawColor(renderer, 3, 3, 3, 255);
-    SDL_RenderDrawRect(renderer, &rect);
+    // STATUS BOARD
+    SDL_Rect rect = {24, 24, 140, 260};
+
+    Resources::Instance()->render(
+        "status",
+        rect.x, rect.y,
+        rect.w, rect.h,
+        rect.w, rect.h,
+        renderer, flip
+        );
 
     Resources::Instance()->renderFrame(
         textureID,
@@ -77,13 +91,49 @@ void Player::render_player(SDL_Renderer* renderer) {
         flip
         );
     SDL_Rect status = {114 , 48, 32, 32};
-    SDL_Rect heart_frame = { 316 - 158 * health, 160, 158,158};
     Resources::Instance()->renderFrame("heart",
-        114, 48, 32, 32,
+        status.x, status.y, status.w, status.h,
         1, 2 - health,
         158, 158,
         renderer, flip);
+
+    //BOMB_LIMIT
+    write_status(renderer, bombLimit, 0);
+    //SHIELD
+    write_status(renderer, shield, 1);
+    //LENGTH
+    write_status(renderer, size_explode - 1, 2);
 };
+
+void Player::write_status(SDL_Renderer* renderer,const int number,const int &size) {
+    int StatusWidth = 140;
+    int StatusHeight = 260;
+    std::string Text = std::to_string(number);
+    SDL_Surface* Surface = TTF_RenderText_Solid(Font, Text.c_str(), Color);
+    if (!Surface) {
+        SDL_Log("Unable to render score text surface! SDL_ttf Error: %s", TTF_GetError());
+        return;
+    }
+    SDL_Texture* statusTexture = SDL_CreateTextureFromSurface(renderer, Surface);
+    if (!statusTexture) {
+        SDL_Log("Unable to create score texture! SDL Error: %s", SDL_GetError());
+        SDL_FreeSurface(Surface);
+        return;
+    }
+    int textWidth = Surface->w;
+    int textHeight = Surface->h;
+    SDL_Rect renderScore = {
+        24 + StatusWidth/2 + StatusWidth/4 - (textWidth/2) + 2,
+        24 + StatusHeight/4 + size * 60 + (StatusHeight/4 - textHeight)/2,
+        textWidth,
+        textHeight
+    };
+
+    SDL_RenderCopy(renderer, statusTexture, nullptr, &renderScore);
+
+    SDL_FreeSurface(Surface);
+    SDL_DestroyTexture(statusTexture);
+}
 
 void Player::update(const int &direction, const int &next_x, const int &next_y, Map& map) {
     if (!walk) {
@@ -97,8 +147,26 @@ void Player::update(const int &direction, const int &next_x, const int &next_y, 
             y += dy;
             walk = true;
             timer = 0;
-            if (map.limit(x, y) == '4') {
-                if (size_explode <= 5) size_explode++;
+            if (map.limit(x, y) >= '4' && map.limit(x, y) <= '8') {
+                switch (map.limit(x,y)) {
+                    case '4':
+                        if (size_explode <= 5) size_explode++;
+                    break;
+                    case '5':
+                        heal("");
+                        break;
+                    case '6':
+                        shield++;
+                        break;
+                    case '7':
+                        if (bombLimit <= 5) bombLimit++;
+                        break;
+                    case '8':
+                        if (health > 0) health--;
+
+                        break;
+                    default: break;
+                }
                 map.Create_map('0', x, y);
             }
         } else {

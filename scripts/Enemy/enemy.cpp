@@ -8,15 +8,11 @@
 #include <cmath>
 #include <queue>
 
-Enemy::Enemy(int X, int Y, SDL_Renderer* renderer) :
-    x0(X), y0(Y), speed(SPEED_PLAYER), texture(nullptr), timer(60), find(1), save(0), time_skill(0), use(false), time_frame(0), walk(false), cast(false), death(0), flip(SDL_FLIP_NONE) {
+Enemy::Enemy(int id, int X, int Y, SDL_Renderer* renderer) :
+    x0(X), y0(Y), speed(SPEED_PLAYER), texture(nullptr), timer(60), find(1), save(0), time_skill(0), use(false),
+    time_frame(0), walk(false), cast(false), death(0), flip(SDL_FLIP_NONE), enemyID(id) {
     //Seed the random number generator (only once)
     static bool seeded = false;
-    if(!seeded)
-    {
-        srand(time(NULL));
-        seeded = true;
-    }
 }
 
 Enemy::~Enemy() {
@@ -24,21 +20,22 @@ Enemy::~Enemy() {
 }
 
 bool Enemy::is_valid(const Map& map,const int& x,const int& y) const {
-    return (x >= 0) && (x < map.getWidth()) && (y >= 0) && (y < map.getHeight()) && (!(map.limit(x, y) > '2'));
+    return (x >= 0) && (x < map.getWidth()) && (y >= 0) && (y < map.getHeight()) &&  (!(map.limit(x, y) == '3'));
 }
 
 
-void Enemy::update(int target_x, int target_y, const Map& map) {
+void Enemy::update(int target_x, int target_y, Map& map) {
     timer--;
     time_skill--;
-    if (timer <= 0 && death == 0) {
-        timer = ENEMIES_DELAY;
-        int dx[] = {-1, 0, 1, 0};
-        int dy[] = {0, -1, 0, 1};
+    int dx[] = {-1, 0, 1, 0};
+    int dy[] = {0, -1, 0, 1};
+    if (timer <= 0 && death == 0 && use == false) {
+        hurt = false;
+        cast = false;
+        timer = ENEMIES_DELAY[enemyID];
         double vx = target_x - x0;
         double vy = target_y - y0;
         double distance = hypot(vx, vy);
-        //SDL_Log("%d %d %d %d %d %d %d %d",x0, y0, save, last_x, last_y, find, next_dx, next_dy);
         if (vx < 0 && vy <= 0 && save != 0) {
             if (save == 1) find = 1;
             else find = 0;
@@ -75,17 +72,17 @@ void Enemy::update(int target_x, int target_y, const Map& map) {
             break;
             case 2: direct = 3;
             break;
-            case 3: direct = 0;
+            default: direct = 0;
             break;
         }
 
         if (find != save) find = (find - 1)%4;
         if (find < 0) find = 4 + find;
 
-        if (map.limit(x0 + next_dx, y0 + next_dy) == '2' || distance <= 1) {
+        if (map.limit(x0 + next_dx, y0 + next_dy) == '2' || distance <= enemyID) {
             if (time_skill < 0) {
                 use = true;
-                time_skill = 30;
+                time_skill = TIME_SKILL[enemyID];
                 time_frame = 0;
             }
             last_x = 0;
@@ -100,6 +97,26 @@ void Enemy::update(int target_x, int target_y, const Map& map) {
         }
     }
 
+    if (cast) {
+        if (enemyID == 1) { //Type 1
+            for (int i = 0; i < 4; i++) {
+                int p_x = x0 + dx[i];
+                int p_y = y0 + dy[i];
+                if (map.limit(p_x, p_y) == '2') map.Create_map('0', p_x, p_y);
+            }
+        } else { // Type 2
+            for (int i = 0; i <= 2; i++) {
+                int p_x = x0 + next_dx * i;
+                int p_y = y0 + next_dy * i;
+                SDL_Log("%d %d", p_x, p_y);
+                srand(time(NULL) + i);
+                int random = rand()%8;
+                if (map.limit(p_x, p_y) == '2') map.Create_map('0', p_x, p_y);
+                if (random == 1 && map.limit(p_x, p_y) == '0') map.Create_map('8', p_x, p_y);
+            }
+        }
+
+    }
 
 
 }
@@ -107,20 +124,18 @@ void Enemy::update(int target_x, int target_y, const Map& map) {
 
 void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
     time_frame++;
-    SDL_Rect enemy_frame;
     SDL_Rect enemyRect= {x0 * TILE_SIZE + CENTER_X - 16,y0 * TILE_SIZE + CENTER_Y - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
     int frame;
-    STATUS enemy = {"enemy", ENEMIES_DELAY, NUM_FRAME_IDLE, 0, 1};
+    string c = "enemy" + to_string(enemyID);
+    STATUS enemy = {c, ENEMIES_DELAY[enemyID], NUM_FRAME_IDLE};
     if (!walk || death > 0) {
-        if (death == 2) enemy = {"enemy_death", ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH, 0, 1};
-        else if (use) enemy = {"enemy_attack", ENEMIES_ATTACK_SPEED, NUM_FRAME_ATTACK, 0, 1};
+        if (death == 2) enemy = {c + "_death", ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH};
+        else if (use) enemy = {c + "_attack", ENEMIES_ATTACK_SPEED[enemyID], NUM_FRAME_ATTACK[enemyID]};
         frame = time_frame/(enemy.speed_frame/enemy.num_frame);
-        if (use && frame > NUM_FRAME_ATTACK - 2) cast = true;
+        if (use && frame > NUM_FRAME_ATTACK[enemyID] - 4) cast = true;
         if (frame >= enemy.num_frame) {
             use = false;
             kill = false;
-            hurt = false;
-            cast = false;
             if (death == 2) {
                 death = 3;
                 frame = 9;
@@ -131,7 +146,7 @@ void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
             }
         }
     } else {
-        enemy = {"enemy_walk", ENEMIES_SPEED_FRAME, NUM_FRAME_WALK, 0, 1};
+        enemy = {c + "_walk", ENEMIES_SPEED_FRAME, NUM_FRAME_WALK};
         frame = time_frame/(enemy.speed_frame/enemy.num_frame);
         float move_frame = frame;
         if (frame >= enemy.num_frame) {
@@ -148,27 +163,45 @@ void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
             walk =  false;
         }
     }
-    if (use) {
+    //use skill
+    if (cast) {
         if (target_x == x0 && target_y == y0) {
             kill = true;
         }
-        int dx[] = {-1, 0, 1, 0};
-        int dy[] = {0, -1, 0, 1};
-        for (int i = 0; i < 4; i++) {
-            if (target_x == x0 + dx[i] && target_y == y0 + dy[i]) {
-                kill = true;
+        if (enemyID == 1) {
+            int dx[] = {-1, 0, 1, 0};
+            int dy[] = {0, -1, 0, 1};
+            for (int i = 0; i < 4; i++) {
+                if (target_x == x0 + dx[i] && target_y == y0 + dy[i]) {
+                    kill = true;
+                }
+                SDL_Rect effect = { CENTER_X + x0 * TILE_SIZE + dx[i] * TILE_SIZE, CENTER_Y + y0 * TILE_SIZE + dy[i] * TILE_SIZE, PLAYER_SIZE/2, PLAYER_SIZE/2 };
+
+                Resources::Instance()->render(c + "_effect",
+                effect.x, effect.y,
+                effect.w, effect.h,
+                48,48,
+                renderer, flip);
             }
-            SDL_Rect effect = { CENTER_X + x0 * TILE_SIZE + dx[i] * TILE_SIZE, CENTER_Y + y0 * TILE_SIZE + dy[i] * TILE_SIZE, PLAYER_SIZE/2, PLAYER_SIZE/2 };
-            //SDL_SetRenderDrawColor(renderer, 255, 152, 23, 255);
-            //SDL_RenderFillRect(renderer, &effect);
-            textureID = "enemy_effect";
-            Resources::Instance()->render(textureID,
-            effect.x, effect.y,
-            effect.w, effect.h,
-            48,48,
-            renderer, flip);
+        } else {
+            int dx[] = {0, 0, -1, 1};
+            int dy[] = {1, -1, 0, 0};
+            for (int i = 1; i <= 2; i++) {
+                if (target_x == x0 + dx[direct] * i && target_y == y0 + dy[direct] * i) {
+                    kill = true;
+                }
+                SDL_Rect effect = { CENTER_X + x0 * TILE_SIZE + i * dx[direct] * TILE_SIZE, CENTER_Y + y0 * TILE_SIZE + i * dy[direct] * TILE_SIZE, PLAYER_SIZE/2, PLAYER_SIZE/2 };
+
+                Resources::Instance()->render(c + "_effect",
+                effect.x, effect.y,
+                effect.w, effect.h,
+                360,360,
+                renderer, flip);
+            }
         }
     }
+
+    // renderEnemy
     textureID = enemy.IMG;
     Resources::Instance()->renderFrame(
         textureID,

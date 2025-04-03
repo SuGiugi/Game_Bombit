@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <cstring>
 
-Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), player(8, 6), map("assets/maps/level1.txt"){}
+Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), map("assets/maps/level1.txt"), player(nullptr){}
 
 bool Game::init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -46,14 +46,10 @@ bool Game::init() {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     isRunning = true;
 
-    // add enemies
-    enemies.emplace_back(9,6, renderer);
-    enemies.emplace_back(1,1, renderer);
 
 
     scoreFont = TTF_OpenFont("assets/font/Karma Suture.otf", 24);
-    menuFont = TTF_OpenFont("assets/font/arial.ttf", 36);
-     if (!scoreFont || !menuFont) {
+     if (!scoreFont) {
         SDL_Log("Failed to load font! SDL_ttf Error: %s", TTF_GetError());
          return false;
      }
@@ -66,6 +62,8 @@ bool Game::init() {
         SDL_Log("Resources initialized Successful");
     }
 
+    player = new Player(6, 6);
+
     if (!loadAssets()) {
         return false;
     }
@@ -75,38 +73,49 @@ bool Game::init() {
 
 bool Game::loadAssets() {
     //load player
-    if (!player.loadTexture("assets/images/player/Slime1_Idle.png", "player", renderer)) {
+    if (!player->loadTexture("assets/images/player/Slime1_Idle.png", "player", renderer)) {
         SDL_Log("Failed to load player texture");
         return false;
     };
-    if (!player.loadTexture("assets/images/player/Slime1_Walk.png", "player_walk", renderer)) {
+    if (!player->loadTexture("assets/images/player/Slime1_Walk.png", "player_walk", renderer)) {
         SDL_Log("Failed to load player walk texture");
         return false;
     }
-    if (!player.loadTexture("assets/images/player/heart.png", "heart", renderer)) {
+    if (!player->loadTexture("assets/images/player/Slime1_Death.png", "player_death", renderer)) {
+        SDL_Log("Failed to load player death texture");
+        return false;
+    }
+    if (!player->loadTexture("assets/images/player/heart.png", "heart", renderer)) {
         SDL_Log("Failed to load heart texture");
         return false;
     }
-    //load enemy
-    if (!Resources::Instance()->load("assets/images/enemies/Slime3_Idle.png", "enemy", renderer)) {
-        SDL_Log("Failed to load enemyTexture");
+    if (!player->loadTexture("assets/images/player/status.png", "status", renderer)) {
+        SDL_Log("Failed to load status texture");
         return false;
     }
-    if (!Resources::Instance()->load("assets/images/enemies/Slime3_Attack.png", "enemy_attack", renderer)) {
-        SDL_Log("Failed to load enemyTexture");
-        return false;
-    }
-    if (!Resources::Instance()->load("assets/images/enemies/Slime3_Walk.png", "enemy_walk", renderer)) {
-        SDL_Log("Failed to load enemyTexture");
-        return false;
-    }
-    if (!Resources::Instance()->load("assets/images/enemies/Slime3_Death.png", "enemy_death", renderer)) {
-        SDL_Log("Failed to load enemyTexture");
-        return false;
-    }
-    if (!Resources::Instance()->load("assets/images/enemies/Slime3_Effect.png", "enemy_effect", renderer)) {
-        SDL_Log("Failed to load enemyTexture");
-        return false;
+    //load Enemy
+    for(int i = 1; i <= 2; i++) {
+        string c = to_string(i);
+        if (!Resources::Instance()->load("assets/images/enemies/1_Idle.png", "enemy1", renderer)) {
+            SDL_Log("Failed to load enemy  %d Texture", i);
+            return false;
+        }
+        if (!Resources::Instance()->load("assets/images/enemies/" + c +"_Attack.png", "enemy" + c + "_attack", renderer)) {
+            SDL_Log("Failed to load enemy %d Texture", i);
+            return false;
+        }
+        if (!Resources::Instance()->load("assets/images/enemies/" + c + "_Walk.png", "enemy" + c + "_walk", renderer)) {
+            SDL_Log("Failed to load enemy %d Texture", i);
+            return false;
+        }
+        if (!Resources::Instance()->load("assets/images/enemies/" + c + "_Death.png", "enemy" + c +"_death", renderer)) {
+            SDL_Log("Failed to load enemy %d Texture", i);
+            return false;
+        }
+        if (!Resources::Instance()->load("assets/images/enemies/" + c + "_Effect.png", "enemy" + c + "_effect", renderer)) {
+            SDL_Log("Failed to load enemy %d Texture, i");
+            return false;
+        }
     }
     // load background
     if (!Resources::Instance()->load("assets/images/background/origbig.png", "background", renderer)) {
@@ -141,33 +150,53 @@ bool Game::loadAssets() {
         }
         explosionTexture[i] = id;
     }
-
-    return true;
-}
-
-
-void Game::renderGameOver() {
-
-    SDL_SetRenderDrawColor(renderer, 50, 50, 50, 1);
-    SDL_RenderClear(renderer);
-
-
-    if (!(GameOverTexture == nullptr)) {
-        int buttonWidth = 80;
-        int buttonHeight = 83;
-        SDL_Rect buttonRect = {
-            (SCREEN_WIDTH - buttonWidth) / 2,
-            (SCREEN_HEIGHT - buttonHeight) / 2,
-            buttonWidth,
-            buttonHeight
-        };
-
-        SDL_RenderCopyEx(renderer, GameOverTexture, &buttonRect, &buttonRect, 0, nullptr, SDL_FLIP_NONE);
-    } else {
-        SDL_Log("Unable to load restart texture! SDL Error: %s", SDL_GetError());
+    //Load MainMenu
+    if (!Resources::Instance()->load("assets/images/Menu/1.png", "MainMenu1", renderer)) {
+        SDL_Log("Failed to load mainMenu");
+        return false;
     }
-
-    SDL_RenderPresent(renderer);
+    if (!Resources::Instance()->load("assets/images/Menu/2.png", "MainMenu2", renderer)) {
+        SDL_Log("Failed to load mainMenu");
+        return false;
+    }
+    //Load Pause
+    if (!Resources::Instance()->load("assets/images/Pause.png", "Pause", renderer)) {
+        SDL_Log("Failed to load pause");
+        return false;
+    }
+    //Load Endless
+    if (!Resources::Instance()->load("assets/images/ENDLESS.png", "EndLess", renderer)) {
+        SDL_Log("Failed to load Endless");
+        return false;
+    }
+    //Load GameOver
+    if (!Resources::Instance()->load("assets/images/YOU DIE/1.png", "GameOver_Good",renderer)) {
+        SDL_Log("Failed to load GameOver");
+        return false;
+    }
+    if (!Resources::Instance()->load("assets/images/YOU DIE/2.png", "GameOver_Amazing",renderer)) {
+        SDL_Log("Failed to load GameOver");
+        return false;
+    }
+    if (!Resources::Instance()->load("assets/images/YOU DIE/3.png", "GameOver_TryBetter",renderer)) {
+        SDL_Log("Failed to load GameOver");
+        return false;
+    }
+    //Load items
+    for (int i = 4; i <= 7; i++) {
+        if (!Resources::Instance()->load("assets/images/items/" + to_string(i - 3) + ".png","Item" + to_string(i), renderer  )) {
+            SDL_Log("Failed to load item");
+            return false;
+        }
+    }
+    //Load Tutorial
+    for (int i = 1; i <= 3; i++) {
+        if (!Resources::Instance()->load("assets/images/TUTORIAL/" + to_string(i) + ".png", "Tutorial" + to_string(i), renderer  )) {
+            SDL_Log("Failed to load tutorial");
+            return false;
+        }
+    }
+    return true;
 }
 
 void Game::handleGameOverEvents() {
@@ -177,57 +206,206 @@ void Game::handleGameOverEvents() {
             case SDL_QUIT:
                 isRunning = false;
             break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    int mouseX = event.button.x;
+                    int mouseY = event.button.y;
+                    SDL_Rect GameOver = {275, 125, 350, 350};
+                    int buttonWidth = 82;
+                    int buttonHeight = 75;
+                    SDL_Rect RestartRect = {
+                        GameOver.x + 63,
+                        GameOver.y + 269,
+                        buttonWidth,
+                        buttonHeight
+                    };
 
+                    SDL_Rect MainMenuRect = {
+                        GameOver.x + 211,
+                        GameOver.y + 269,
+                        buttonWidth,
+                        buttonHeight
+                    };
+
+                    if (mouseX >= RestartRect.x && mouseX <= RestartRect.x + buttonWidth &&
+                        mouseY >= RestartRect.y && mouseY <= RestartRect.y + buttonHeight) {
+                        // Start game
+                        SDL_Log("click");
+                        current_state = GAME_STATE::PLAYING;
+                        resetGame();
+                        } else if (mouseX >= MainMenuRect.x && mouseX <= MainMenuRect.x + buttonWidth &&
+                            mouseY >= MainMenuRect.y && mouseY <= MainMenuRect.y + buttonHeight) {
+                            current_state = GAME_STATE::MAIN_MENU;
+                            resetGame();
+                        }
+                }
+            break;
+            default:
+                break;
+        }
+    }
+}
+
+void Game::handleMainMenuEvents() {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+            case SDL_QUIT:
+                isRunning = false;
+            break;
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT) {
                     int mouseX = event.button.x;
                     int mouseY = event.button.y;
 
-                    int buttonWidth = 80;
-                    int buttonHeight = 83;
-                    SDL_Rect buttonRect = {
-                        (SCREEN_WIDTH - buttonWidth) / 2,
-                        (SCREEN_HEIGHT - buttonHeight) / 2,
+                    int buttonWidth = 180;
+                    int buttonHeight = 55;
+
+                    SDL_Rect endlessbuttonRect = {
+                        502,
+                        465,
                         buttonWidth,
                         buttonHeight
                     };
 
-                    if (mouseX >= buttonRect.x && mouseX <= buttonRect.x + buttonRect.w &&
-                        mouseY >= buttonRect.y && mouseY <= buttonRect.y + buttonRect.h) {
-                        // Start game
+                    SDL_Rect exitbuttonRect = {
+                        23,32,
+                        76, 85
+                    };
+                    SDL_Rect musicButtonRect = {
+                        791, 401,
+                        97, 100
+                    };
+                    SDL_Rect tutorialButtonRect = {
+                        791,274,
+                        97, 100
+                    };
+                    if (mouseX >= endlessbuttonRect.x && mouseX <= endlessbuttonRect.x + endlessbuttonRect.w &&
+                        mouseY >= endlessbuttonRect.y && mouseY <= endlessbuttonRect.y + endlessbuttonRect.h) {
                         current_state = GAME_STATE::PLAYING;
-                        //resetGame();
-                        }
+                    } else if (mouseX >= exitbuttonRect.x && mouseX <= exitbuttonRect.x + exitbuttonRect.w &&
+                        mouseY >= exitbuttonRect.y && mouseY <= exitbuttonRect.y + exitbuttonRect.h) {
+                        isRunning = false;
+                    } else if (mouseX >= musicButtonRect.x && mouseX <= musicButtonRect.x + musicButtonRect.w &&
+                        mouseY >= musicButtonRect.y && mouseY <= musicButtonRect.y + musicButtonRect.h) {
+                        SDL_Log("tes");
+                        Menu_id = 1 - Menu_id;
+                    } else if (mouseX >= tutorialButtonRect.x && mouseX <= tutorialButtonRect.x + tutorialButtonRect.w &&
+                        mouseY >= tutorialButtonRect.y && mouseY <= tutorialButtonRect.y + tutorialButtonRect.h) {
+                        tutorial = true;
+                    }
                 }
-            break;
+                break;
+            default:
+                break;
         }
     }
 }
-
-void Game::handleMainMenuEvents() {}
 void Game::handlePauseMenuEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
+            case SDL_QUIT:
+                isRunning = false;
+                break;
             case SDL_KEYDOWN:
                 if (event.key.keysym.sym == SDLK_ESCAPE) {
                     current_state = GAME_STATE::PLAYING;
                 }
-            break;
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    int mouseX = event.button.x;
+                    int mouseY = event.button.y;
+
+                    int buttonWidth = 82;
+                    int buttonHeight = 75;
+
+                    SDL_Rect ResetRect = {
+                        275 + 22, 250 + 12,
+                        82, 75
+                    };
+                    SDL_Rect ContinueRect = {
+                            275 + 130, 250 + 12,
+                        82, 75
+                    };
+                    SDL_Rect MainMenuRect = {
+                        275 + 247, 250 + 12,
+                        82, 75
+                    };
+                    if (mouseX >= ResetRect.x && mouseX <= ResetRect.x + ResetRect.w &&
+                        mouseY >= ResetRect.y && mouseY <= ResetRect.y + ResetRect.h) {
+                        resetGame();
+                        current_state = GAME_STATE::PLAYING;
+                    } else if (mouseX >= ContinueRect.x && mouseX <= ContinueRect.x + ContinueRect.w &&
+                        mouseY >= ContinueRect.y && mouseY <= ContinueRect.y + ContinueRect.h) {
+                        current_state = GAME_STATE::PLAYING;
+                    } else if (mouseX >= MainMenuRect.x && mouseX <= MainMenuRect.x + MainMenuRect.w &&
+                        mouseY >= MainMenuRect.y && mouseY <= MainMenuRect.y + MainMenuRect.h) {
+                        resetGame();
+                        current_state = GAME_STATE::MAIN_MENU;
+                    }
+                }
+                break;
+            default:
+                break;
         }
     }
 }
 
-void Game::renderScore() {
-    std::string scoreText = "COLLECT: " + std::to_string(score) +"/3";
+void Game::handleGameTutorial() {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+            case SDL_QUIT:
+                isRunning = false;
+                break;
+            case SDL_KEYDOWN:
+                if (time_tutorial_popup < 0) tutorial = false;
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (time_tutorial_popup < 0) tutorial = false;
+                break;
+            default:
+                break;
+        }
+    }
+}
 
+void Game::renderMainMenu() {
+    Resources::Instance()->render("MainMenu" + to_string(Menu_id + 1), 0, 0, 900, 600, 900, 600, renderer, flip);
+}
+
+void Game::renderPause() {
+    SDL_Rect PauseRect = {275 ,250 , 350, 100};
+    Resources::Instance()->render("Pause", PauseRect.x, PauseRect.y, PauseRect.w, PauseRect.h, PauseRect.w,PauseRect.h, renderer, flip);
+}
+
+void Game::renderTutorial(const int id) {
+    time_tutorial_popup--;
+    Resources::Instance()->render("Tutorial" + to_string(id), 150, 125, 600, 350, 600, 350, renderer, flip);
+}
+
+void Game::renderGameOver() {
+    SDL_Rect GameOver = {275, 125, 350, 350};
+    if (score < 10) {
+        Resources::Instance()->render("GameOver_TryBetter", GameOver.x, GameOver.y, GameOver.w, GameOver.h, GameOver.w, GameOver.h, renderer, flip);
+
+    } else if (score < 50) {
+        Resources::Instance()->render("GameOver_Good", GameOver.x, GameOver.y, GameOver.w, GameOver.h, GameOver.w, GameOver.h, renderer, flip);
+
+    } else {
+        Resources::Instance()->render("GameOver_Amazing", GameOver.x, GameOver.y, GameOver.w, GameOver.h, GameOver.w, GameOver.h, renderer, flip);
+
+    }
+
+    std::string scoreText = std::to_string(score);
 
     SDL_Surface* scoreSurface = TTF_RenderText_Solid(scoreFont, scoreText.c_str(), scoreColor);
     if (!scoreSurface) {
         SDL_Log("Unable to render score text surface! SDL_ttf Error: %s", TTF_GetError());
         return;
     }
-
     SDL_Texture* scoreTexture = SDL_CreateTextureFromSurface(renderer, scoreSurface);
     if (!scoreTexture) {
         SDL_Log("Unable to create score texture! SDL Error: %s", SDL_GetError());
@@ -235,17 +413,54 @@ void Game::renderScore() {
         return;
     }
 
-    int textWidth = scoreSurface->w;
-    int textHeight = scoreSurface->h;
+    int textWidth = scoreSurface->w * 2;
+    int textHeight = scoreSurface->h * 2;
 
-    SDL_Rect renderQuad = {
-        SCREEN_WIDTH - textWidth - 15,
-        20,
+    SDL_Rect renderScore = {
+        275 + 200,
+        125 + 145,
         textWidth,
         textHeight
     };
 
-    SDL_RenderCopy(renderer, scoreTexture, nullptr, &renderQuad);
+    SDL_RenderCopy(renderer, scoreTexture, nullptr, &renderScore);
+
+    SDL_FreeSurface(scoreSurface);
+    SDL_DestroyTexture(scoreTexture);
+}
+
+
+
+void Game::renderScore() {
+    int ScoreWidth = 140;
+    int ScoreHeight = 260;
+
+    Resources::Instance()->render("EndLess",
+        SCREEN_WIDTH - ScoreWidth - 24, 24, ScoreWidth, ScoreHeight,
+        ScoreWidth, ScoreHeight, renderer, flip);
+
+    std::string scoreText = std::to_string(score);
+    SDL_Surface* scoreSurface = TTF_RenderText_Solid(scoreFont, scoreText.c_str(), scoreColor);
+    if (!scoreSurface) {
+        SDL_Log("Unable to render score text surface! SDL_ttf Error: %s", TTF_GetError());
+        return;
+    }
+    SDL_Texture* scoreTexture = SDL_CreateTextureFromSurface(renderer, scoreSurface);
+    if (!scoreTexture) {
+        SDL_Log("Unable to create score texture! SDL Error: %s", SDL_GetError());
+        SDL_FreeSurface(scoreSurface);
+        return;
+    }
+    int textWidth = scoreSurface->w * 4;
+    int textHeight = scoreSurface->h * 4;
+    SDL_Rect renderScore = {
+        (SCREEN_WIDTH - ScoreWidth - 24) + (ScoreWidth / 2) - (textWidth/2),
+        135,
+        textWidth,
+        textHeight
+    };
+
+    SDL_RenderCopy(renderer, scoreTexture, nullptr, &renderScore);
 
     SDL_FreeSurface(scoreSurface);
     SDL_DestroyTexture(scoreTexture);
@@ -256,41 +471,58 @@ void Game::run() {
     SDL_Event event;
 
     while (isRunning) {
-        handleEvent();
         update();
         render();
-        SDL_Delay(18);
+        SDL_Delay(15);
     }
 }
 
-void Game::handleEvent() {
-    SDL_GetMouseState(&mouseX, &mouseY);
-
-    switch (current_state) {
-        case GAME_STATE::PLAYING:
-            this->inputHandler.handleEvents(this->isRunning, this->player, *this, current_state, map, bombs);
-        break;
-
-        case GAME_STATE::MAIN_MENU:
-            handleMainMenuEvents();
-        break;
-
-        case GAME_STATE::PAUSE:
-            handlePauseMenuEvents();
-        break;
-
-        case GAME_STATE::GAME_OVER:
-            handleGameOverEvents();
-        break;
-        default:
-            break;
-    }
+void Game::resetGame() {
+    player->set_direct(0);
+    player->setXY(6,6);
+    player->heal("full");
+    bombs.clear();
+    enemies.clear();
+    explosions.clear();
+    map.load("assets/maps/level1.txt");
+    score = 0;
+    time_EnemySpawn = 0;
+    tutorial = 0;
 }
+
 
 
 void Game::update() {
     switch (current_state) {
         case GAME_STATE::PLAYING:
+            if (tutorial == true) {
+                handleGameTutorial();
+                break;
+            }
+            this->inputHandler.handleEvents(this->isRunning, *this->player, *this, current_state, map, bombs);
+            if (time_EnemySpawn%(TIME_1SECOND/2) == 0) {
+                if (cnt_tutorial == 0) {
+                    cnt_tutorial = 1;
+                    tutorial = true;
+                }
+                enemies.emplace_back(1, 1,1,renderer);
+                enemies.emplace_back(1, 15,15,renderer);
+                if (score >= 10) {
+                    if (cnt_tutorial == 1) {
+                        cnt_tutorial = 2;
+                        tutorial = true;
+                    }
+                    enemies.emplace_back(2, 15,1,renderer);
+                    enemies.emplace_back(2, 1,15,renderer);
+                    enemies.emplace_back(1, 1,6,renderer);
+                    enemies.emplace_back(1, 15,6,renderer);
+                }
+                if (score > 50) {
+                    enemies.emplace_back(2, 6,1,renderer);
+                    enemies.emplace_back(2, 6, 15,renderer);
+                }
+            }
+            time_EnemySpawn++;
             for (auto it = bombs.begin(); it != bombs.end();) {
                 it->update();
                 if (it->isExploded()) {
@@ -306,7 +538,15 @@ void Game::update() {
                     ++it;
                 }
             }
-
+        // update enemies
+        for (auto it = enemies.begin(); it != enemies.end();) {
+            it->update(static_cast<int> (logic.round_2(player->getX())),static_cast<int> (logic.round_2(player->getY())), map); //Use it pointer access
+            if (it->isDeath() == 3) {
+                score++;
+                it = enemies.erase(it);
+            }
+            else ++it;
+        }
         //Update Explosions
         for (auto it = explosions.begin(); it != explosions.end();) {
             if (it->isFinished()) {
@@ -316,24 +556,10 @@ void Game::update() {
                 ++it;
             }
         }
-        for (auto it = enemies.begin(); it != enemies.end();) {
-            it->update(static_cast<int> (logic.round_2(player.getX())),static_cast<int> (logic.round_2(player.getY())), map); //Use it pointer access
-            if (it ->get_skill() == true) {
-                for (auto u : position) {
-                    int dx = it->getX() + u.first;
-                    int dy = it->getY() + u.second;
-                    if (map.limit(dx, dy) == '2') map.Create_map('0', dx, dy);
-                }
-            }
-            if (it->isDeath() == 3) {
-                score++;
-                it = enemies.erase(it);
-            }
-            else ++it;
-        }
         break;
         case GAME_STATE::MAIN_MENU:
-            handleMainMenuEvents();
+            if (tutorial == true) handleGameTutorial();
+            else handleMainMenuEvents();
             break;
         case GAME_STATE::PAUSE:
             handlePauseMenuEvents();
@@ -358,7 +584,6 @@ void Game::render() {
     //Render the Map:
     map.render(renderer);
     // Draw Player:
-    player.render_player(renderer);
 
     //Draw Bombs:
     for (const auto& bomb : bombs) {
@@ -374,36 +599,33 @@ void Game::render() {
         int current_explosion_X = explosion.get_X();
         int current_explosion_Y = explosion.get_Y();
         for (auto it = enemies.begin(); it != enemies.end();) {
-            double enemy_x = it->getX();
-            double enemy_y = it->getY();
-            if ((current_explosion_X - logic.round_2(enemy_x)) * (current_explosion_X - logic.round_2(enemy_x)) + (current_explosion_Y - logic.round_2(enemy_y)) * (current_explosion_Y - logic.round_2(enemy_y))  < 1)
+            if (current_explosion_X == it->getX() && current_explosion_Y == it->getY())
             {it -> Death();}
             ++it;
         }
-        if ((current_explosion_X - logic.round_2(player.getX())) * (current_explosion_X - logic.round_2(player.getX())) + (current_explosion_Y - logic.round_2(player.getY())) * (current_explosion_Y - logic.round_2(player.getY()))  < 1 && explosion.get_hurt() == false) {
-            player.hurt();
+        if (current_explosion_Y == player->getY() && current_explosion_X == player->getX() && explosion.get_hurt() == false) {
+            player->hurt();
             explosion.is_hurt();
         }
         explosion.render(renderer,explosionTexture[0], 0,0);
         for (auto u : position) {
-            for (int i = 1; i < player.size(); i++) {
+            for (int i = 1; i < player->size(); i++) {
                 current_explosion_X = explosion.get_X() + u.first * i;
                 current_explosion_Y = explosion.get_Y() + u.second * i;
-                if (map.limit(current_explosion_X, current_explosion_Y) == '2' && explosion.isFinished() == true) {
+                if (map.limit(current_explosion_X, current_explosion_Y) == '8' || ( map.limit(current_explosion_X, current_explosion_Y) == '2' && explosion.isFinished() == true)) {
                     map.Create_map('0', current_explosion_X, current_explosion_Y);
                     break;
                 } else if (map.limit(current_explosion_X, current_explosion_Y) > '1') {
                     break;
                 }
-                if ((current_explosion_X - logic.round_2(player.getX())) * (current_explosion_X - logic.round_2(player.getX())) + (current_explosion_Y - logic.round_2(player.getY())) * (current_explosion_Y - logic.round_2(player.getY()))  < 1 && explosion.get_hurt() == false) {
-                    player.hurt();
+                if (current_explosion_Y == player->getY() && current_explosion_X == player->getX() && explosion.get_hurt() == false) {
+                    player->hurt();
                     explosion.is_hurt();
                 }
                 explosion.render(renderer,explosionTexture[i], u.first*i,u.second*i);
                 for (auto it = enemies.begin(); it != enemies.end();) {
-                    double enemy_x = it->getX();
-                    double enemy_y = it->getY();
-                    if ((current_explosion_X - logic.round_2(enemy_x)) * (current_explosion_X - logic.round_2(enemy_x)) + (current_explosion_Y - logic.round_2(enemy_y)) * (current_explosion_Y - logic.round_2(enemy_y))  < 1) {it->Death();};
+                    if (current_explosion_X == it->getX() && current_explosion_Y == it->getY())
+                    {it -> Death();}
                     ++it;
                 }
             }
@@ -412,22 +634,40 @@ void Game::render() {
     }
 
     for (auto& enemy : enemies) {
-        enemy.render(renderer, player.getX(),player.getY());
+        enemy.render(renderer, player->getX(),player->getY());
         if (enemy.is_kill() && !enemy.is_hurt()) {
-            player.hurt();
+            player->hurt();
             enemy.hurt_player();
         }
     }
+    player->render_player(renderer);
+
+    if (player->get_health() == 0) {
+        if (player->isDeath() == 0) player->Death(1);
+        current_state = GAME_STATE::GAME_OVER;
+    }
     switch (current_state) {
+        case GAME_STATE::MAIN_MENU:
+            renderMainMenu();
+            if (tutorial == true) renderTutorial(1);
+            break;
+        case GAME_STATE::GAME_OVER:
+            if (player->isDeath() == 2) renderGameOver();
+            break;
         case GAME_STATE::PLAYING:
+            if (tutorial == true) {
+                if (score < 10) renderTutorial(2);
+                else renderTutorial(3);
+            }
+        break;
             break;
         case GAME_STATE::PAUSE:
+            renderPause();
             break;
         default:
             break;
 
     }
-
     SDL_RenderPresent(renderer);
 }
 
@@ -435,6 +675,10 @@ void Game::render() {
 
 
 void Game::cleanup() {
+    if (this->player) {
+        delete player;
+        player = nullptr;
+    }
     Resources::Instance()->clean();
     if (this->renderer) {
         SDL_DestroyRenderer(renderer);

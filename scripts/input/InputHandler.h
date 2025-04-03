@@ -16,7 +16,7 @@ public:
     InputHandler();
     ~InputHandler() = default;
 
-    void handleEvents(bool& running, Player& player, Game& game, GAME_STATE& currentState, Map& map, std::vector<Bomb> &bombs);
+    void handleEvents(bool& running, Player& player, Game& game, GAME_STATE& currentState,Map& map, std::vector<Bomb> &bombs);
 
 private:
     bool mouseButtonDown;

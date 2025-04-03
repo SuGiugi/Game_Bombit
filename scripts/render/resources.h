@@ -3,6 +3,7 @@
 
 #include <SDL.h>
 #include <bits/stdc++.h>
+#include <SDL_ttf.h>
 using namespace std;
 
 class Resources {

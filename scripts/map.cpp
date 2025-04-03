@@ -2,9 +2,7 @@
 #include "game.h"
 #include <fstream>
 #include <SDL.h> //Added for SDL_Log
-#include <iostream>
 #include "player.h"
-#include "constant.h"
 #include <cstring>
 using namespace std;
 
@@ -18,7 +16,7 @@ bool Map::load(const std::string& filename) {
         SDL_Log("Failed to open map file: %s", filename.c_str());
         return false;
     }
-
+    mapData.clear();
     //Assuming a simple text-based map format (e.g., 0 for empty, 1 for wall)
     std::string line;
     while (std::getline(file, line)) {
@@ -41,24 +39,36 @@ void Map::render(SDL_Renderer* renderer) {
                 tileRect.w, tileRect.h,
                 32, 32, renderer, SDL_FLIP_NONE);
             if (mapData[y][x] =='3') {
-                //SDL_Rect rock = {7 , 0 , 52, 62};
-                //SDL_RenderCopy(renderer,rockTexture, &rock, &tileRect);
-                Resources::Instance()->render("rock",
+                Resources::Instance()->renderFrame("rock",
                 tileRect.x, tileRect.y,
                 tileRect.w, tileRect.h,
-                52, 62, renderer, SDL_FLIP_NONE);
+                0, 0,
+                66, 64, renderer, SDL_FLIP_NONE);
             } else if (mapData[y][x] == '2') {
-                // int ran = 1;
-                // SDL_Rect tree = {65 * ran , 0 , 65, 80};
-                // SDL_RenderCopy(renderer,objectTexture, &tree, &tileRect);
-                Resources::Instance()->render("tree",
+                Resources::Instance()->renderFrame("tree",
                 tileRect.x, tileRect.y,
                 tileRect.w, tileRect.h,
+                0,0,
                 65, 80, renderer, SDL_FLIP_NONE);
-            } else if (mapData[y][x] == '4') {
-                SDL_Rect rect = {24, 24, 140, 80};
-
-                SDL_SetRenderDrawColor(renderer, 212, 201, 190, 255);
+            } else if ('4' <= mapData[y][x] && mapData[y][x] <= '7') {
+                string c;
+                switch (mapData[y][x]) {
+                    case '4':  c = "Item4";
+                    break;
+                    case '5': c = "Item5";
+                    break;
+                    case '6': c = "Item6";
+                    break;
+                    case '7': c = "Item7";
+                    break;
+                    default: break;
+                }
+                Resources::Instance()->render(c,
+                                tileRect.x, tileRect.y,
+                                tileRect.w, tileRect.h,
+                                64, 64, renderer, SDL_FLIP_NONE);
+            } else if (mapData[y][x] == '8') {
+                SDL_SetRenderDrawColor(renderer, 198, 142, 253, 255);
                 SDL_RenderFillRect(renderer, &tileRect);
             }
         }
@@ -72,8 +82,11 @@ char Map::limit(int x, int y) const {
 void Map::Create_map(char a, int x, int y) {
     int rate = 10;
     if (mapData[y][x] == '2') {
-           rate = rand()%10;
+           rate = rand()%40;
     }
     mapData[y][x] = a;
     if (rate == 0) mapData[y][x] = '4';
+    if (rate == 1) mapData[y][x] = '5';
+    if (rate == 2) mapData[y][x] = '6';
+    if (rate == 3) mapData[y][x] = '7';
 }

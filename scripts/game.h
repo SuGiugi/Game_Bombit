@@ -27,12 +27,8 @@ public:
     Game();
     bool init();
     void run();
-    void handleInput(SDL_Event& event);
-    void update();
-    void render();
     void renderScore();
     void cleanup();
-    void placeBomb(int x, int y);
 
 
     std::pair<int, int> position[4] = {
@@ -45,11 +41,17 @@ private:
 
     bool loadAssets();
 
-    void handleEvent();
+    void resetGame();
+    void update();
+    void render();
+    void renderTutorial(const int id);
+    void renderGameOver();
+    void renderPause();
+    void renderMainMenu();
+    void handleGameTutorial();
     void handleGameOverEvents();
     void handleMainMenuEvents();
     void handlePauseMenuEvents();
-    void renderGameOver();
 
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -60,23 +62,28 @@ private:
     string background_Texture;
 
     TTF_Font* scoreFont;
-    TTF_Font* menuFont;
 
 
     SDL_RendererFlip flip = SDL_FLIP_NONE;
     SDL_Color textColor = {255, 255, 255, 255};
     SDL_Color scoreColor = {255, 240, 133, 255};
 
-    GAME_STATE current_state = GAME_STATE::PLAYING;
+    GAME_STATE current_state = GAME_STATE::MAIN_MENU;
 
     Logic logic;
-    Player player;  //Player object
+    Player* player;  //Player object
     Map map; //The Map object.
     std::vector<Bomb> bombs; //Vector to store bomb objects
     std::vector<Explosion> explosions; // Store active explosions
     std::vector<Enemy> enemies;
 
+
+    int Menu_id = 0;
+    int time_EnemySpawn = 0;
+    int cnt_tutorial = 0;
+    int time_tutorial_popup = TIME_POPUP;
     int score = 0;
+    bool tutorial = false;
     bool isRunning;
     int mouseX, mouseY;
 };
