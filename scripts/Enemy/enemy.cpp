@@ -79,7 +79,7 @@ void Enemy::update(int target_x, int target_y, Map& map) {
         if (find != save) find = (find - 1)%4;
         if (find < 0) find = 4 + find;
 
-        if (map.limit(x0 + next_dx, y0 + next_dy) == '2' || distance <= enemyID) {
+        if (map.limit(x0 + next_dx, y0 + next_dy) == '2' || distance <= DANGER[enemyID]) {
             if (time_skill < 0) {
                 use = true;
                 time_skill = TIME_SKILL[enemyID];
@@ -104,16 +104,19 @@ void Enemy::update(int target_x, int target_y, Map& map) {
                 int p_y = y0 + dy[i];
                 if (map.limit(p_x, p_y) == '2') map.Create_map('0', p_x, p_y);
             }
-        } else { // Type 2
+        } else if (enemyID == 2) { // Type 2
             for (int i = 0; i <= 2; i++) {
                 int p_x = x0 + next_dx * i;
                 int p_y = y0 + next_dy * i;
-                SDL_Log("%d %d", p_x, p_y);
                 srand(time(NULL) + i);
                 int random = rand()%8;
                 if (map.limit(p_x, p_y) == '2') map.Create_map('0', p_x, p_y);
                 if (random == 1 && map.limit(p_x, p_y) == '0') map.Create_map('8', p_x, p_y);
             }
+        }  else {
+            int p_x = x0 + next_dx;
+            int p_y = y0 + next_dy;
+            if (map.limit(p_x, p_y) == '2') map.Create_map('0', p_x, p_y);
         }
 
     }
@@ -127,7 +130,7 @@ void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
     SDL_Rect enemyRect= {x0 * TILE_SIZE + CENTER_X - 16,y0 * TILE_SIZE + CENTER_Y - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
     int frame;
     string c = "enemy" + to_string(enemyID);
-    STATUS enemy = {c, ENEMIES_DELAY[enemyID], NUM_FRAME_IDLE};
+    STATUS enemy = {c, ENEMIES_DELAY[enemyID], NUM_FRAME_IDLE[enemyID]};
     if (!walk || death > 0) {
         if (death == 2) enemy = {c + "_death", ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH};
         else if (use) enemy = {c + "_attack", ENEMIES_ATTACK_SPEED[enemyID], NUM_FRAME_ATTACK[enemyID]};
@@ -138,7 +141,7 @@ void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
             kill = false;
             if (death == 2) {
                 death = 3;
-                frame = 9;
+                frame = NUM_FRAME_ATTACK[enemyID];
             }
             else {
                 frame = 0;
@@ -146,7 +149,7 @@ void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
             }
         }
     } else {
-        enemy = {c + "_walk", ENEMIES_SPEED_FRAME, NUM_FRAME_WALK};
+        enemy = {c + "_walk", ENEMIES_SPEED_FRAME[enemyID], NUM_FRAME_WALK[enemyID]};
         frame = time_frame/(enemy.speed_frame/enemy.num_frame);
         float move_frame = frame;
         if (frame >= enemy.num_frame) {
@@ -183,7 +186,7 @@ void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
                 48,48,
                 renderer, flip);
             }
-        } else {
+        } else if (enemyID == 2){
             int dx[] = {0, 0, -1, 1};
             int dy[] = {1, -1, 0, 0};
             for (int i = 1; i <= 2; i++) {
@@ -198,9 +201,24 @@ void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
                 360,360,
                 renderer, flip);
             }
+        } else {
+            int dx[] = {0, 0, -1, 1};
+            int dy[] = {1, -1, 0, 0};
+                if (target_x == x0 + dx[direct] && target_y == y0 + dy[direct]) {
+                    kill = true;
+                }
+                SDL_Rect effect = { CENTER_X + x0 * TILE_SIZE +  dx[direct] * TILE_SIZE,
+                    CENTER_Y + y0 * TILE_SIZE + dy[direct] * TILE_SIZE, PLAYER_SIZE/2, PLAYER_SIZE/2 };
+
+                Resources::Instance()->render(c + "_effect",
+                effect.x, effect.y,
+                effect.w, effect.h,
+                360,360,
+                renderer, flip);
+
         }
     }
-
+    if (enemyID == 3) SDL_Log("%d", frame);
     // renderEnemy
     textureID = enemy.IMG;
     Resources::Instance()->renderFrame(
@@ -212,15 +230,13 @@ void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
         renderer,
         flip
         );
-
-
 }
 
-double Enemy::getX() const {
+int Enemy::getX() const {
     return x0;
 }
 
-double Enemy::getY() const {
+int Enemy::getY() const {
     return y0;
 }
 

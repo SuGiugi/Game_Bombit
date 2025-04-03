@@ -17,8 +17,8 @@ public:
     void update(int target_x, int target_y, Map& map);
     void render(SDL_Renderer* renderer, int target_x,int target_y);
 
-    double getX() const;
-    double getY() const;
+    int getX() const;
+    int getY() const;
     bool get_skill()const;
     void changeX(double a) {x0 = a;};
     void changeY(double a) {y0 = a;}
@@ -28,6 +28,7 @@ public:
     bool is_kill() const {return kill;};
     bool is_hurt() const {return hurt;};
     void hurt_player() {hurt = true;};
+    int ID() const {return enemyID;};
 
 private:
     struct STATUS {

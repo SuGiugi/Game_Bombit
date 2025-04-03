@@ -15,13 +15,14 @@ public:
     Map(const std::string& filename);
     bool load(const std::string& filename);
     char limit(int x, int y) const;
-    void render(SDL_Renderer* renderer);
+    void render(SDL_Renderer* renderer, int id);
 
 
     void Create_map(char a, int x, int y);
     int getWidth() const { return width; }
     int getHeight() const { return height; }
-    std::vector<std::string> get_map() { return mapData; }
+    vector<string> get_map() { return mapData; }
+    char generate_item();
 
 private:
     std::vector<std::string> mapData;

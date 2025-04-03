@@ -8,6 +8,9 @@ public:
     bool isExploded() const;
     int getX() const;
     int getY() const;
+    int gettime() const {
+        return timer;
+    }
 
 private:
     int x;

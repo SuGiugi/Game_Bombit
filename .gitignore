@@ -4,3 +4,6 @@ build/
 *.
 cmake-build-debug/
 SDL2/
+cmake-build-debug/.ninja_log
+cmake-build-debug/CMakeFiles/clion-Debug-log.txt
+cmake-build-debug/CMakeFiles/clion-environment.txt

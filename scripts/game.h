@@ -40,11 +40,11 @@ public:
 private:
 
     bool loadAssets();
-
+    void write_status(SDL_Renderer* renderer,const int &number,const int &size) const;
     void resetGame();
     void update();
     void render();
-    void renderTutorial(const int id);
+    void renderTutorial(const int &id);
     void renderGameOver();
     void renderPause();
     void renderMainMenu();
@@ -58,15 +58,14 @@ private:
     InputHandler inputHandler;
 
     SDL_Texture* GameOverTexture;
-    string explosionTexture[5];
-    string background_Texture;
+    string explosionTexture[6];
 
-    TTF_Font* scoreFont;
+    TTF_Font* Font;
 
 
     SDL_RendererFlip flip = SDL_FLIP_NONE;
-    SDL_Color textColor = {255, 255, 255, 255};
-    SDL_Color scoreColor = {255, 240, 133, 255};
+    SDL_Color textColor = {221, 168, 83, 255};
+    SDL_Color Color = {255, 240, 133, 255};
 
     GAME_STATE current_state = GAME_STATE::MAIN_MENU;
 
@@ -77,15 +76,13 @@ private:
     std::vector<Explosion> explosions; // Store active explosions
     std::vector<Enemy> enemies;
 
-
+    int background_Texture = 2;
     int Menu_id = 0;
     int time_EnemySpawn = 0;
     int cnt_tutorial = 0;
-    int time_tutorial_popup = TIME_POPUP;
     int score = 0;
     bool tutorial = false;
-    bool isRunning;
-    int mouseX, mouseY;
+    bool isRunning = false;
 };
 
 #endif

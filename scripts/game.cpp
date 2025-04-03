@@ -10,7 +10,8 @@
 #include <algorithm>
 #include <cstring>
 
-Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), map("assets/maps/level1.txt"), player(nullptr){}
+Game::Game() : window(nullptr), renderer(nullptr), isRunning(false), map("assets/maps/level1.txt"), player(nullptr),
+Font(nullptr), GameOverTexture(nullptr){}
 
 bool Game::init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -48,11 +49,11 @@ bool Game::init() {
 
 
 
-    scoreFont = TTF_OpenFont("assets/font/Karma Suture.otf", 24);
-     if (!scoreFont) {
+    Font = TTF_OpenFont("assets/font/VCR_OSD_MONO_1.001.ttf", 24);
+    if (!Font) {
         SDL_Log("Failed to load font! SDL_ttf Error: %s", TTF_GetError());
          return false;
-     }
+    }
 
 
     if (!Resources::Instance()->init()) {
@@ -62,7 +63,7 @@ bool Game::init() {
         SDL_Log("Resources initialized Successful");
     }
 
-    player = new Player(6, 6);
+    player = new Player(8, 8);
 
     if (!loadAssets()) {
         return false;
@@ -94,9 +95,9 @@ bool Game::loadAssets() {
         return false;
     }
     //load Enemy
-    for(int i = 1; i <= 2; i++) {
+    for(int i = 1; i <= NUMBER_ENEMIES; i++) {
         string c = to_string(i);
-        if (!Resources::Instance()->load("assets/images/enemies/1_Idle.png", "enemy1", renderer)) {
+        if (!Resources::Instance()->load("assets/images/enemies/" + c +"_Idle.png", "enemy" + c, renderer)) {
             SDL_Log("Failed to load enemy  %d Texture", i);
             return false;
         }
@@ -118,22 +119,34 @@ bool Game::loadAssets() {
         }
     }
     // load background
-    if (!Resources::Instance()->load("assets/images/background/origbig.png", "background", renderer)) {
-        SDL_Log("Failed to load background texture.");
-        return false;
+    for (int i = 1; i <= 3; i++) {
+        if (!Resources::Instance()->load("assets/images/background/" + to_string(i) +".png",
+            "background" + to_string(i), renderer)) {
+            SDL_Log("Failed to load background texture.");
+            return false;
+        }
     }
-    background_Texture = "background";
     //load bomb
-    if (!Resources::Instance()->load("assets/images/bomb.png", "bomb", renderer)) {
+    if (!Resources::Instance()->load("assets/images/bomb/1.png", "bomb1", renderer)) {
         SDL_Log("Failed to load bomb");
         return false;
     }
-    if (!Resources::Instance()->load("assets/images/grass.png", "grass", renderer)) {
-        SDL_Log("Failed to load map texture.");
+    if (!Resources::Instance()->load("assets/images/bomb/2.png", "bomb2", renderer)) {
+        SDL_Log("Failed to load bomb");
         return false;
     }
-    if (!Resources::Instance()->load("assets/images/tree2.png", "tree", renderer)) {
+    for (int i = 1; i <= 3; i++) {
+        if (!Resources::Instance()->load("assets/images/ground/" + to_string(i) + ".png", "grass" + to_string(i), renderer)) {
+            SDL_Log("Failed to load map texture.");
+            return false;
+        }
+    }
+    if (!Resources::Instance()->load("assets/images/tree.png", "tree", renderer)) {
         SDL_Log("Failed to load object texture.");
+        return false;
+    }
+    if (!Resources::Instance()->load("assets/images/shrub.png", "shrub", renderer)) {
+        SDL_Log("Failed to load shrub texture.");
         return false;
     }
     if (!Resources::Instance()->load("assets/images/rock.png", "rock", renderer)) {
@@ -141,7 +154,7 @@ bool Game::loadAssets() {
         return false;
     }
     //Load explosion;
-    for (int i = 0; i < NUM_FRAMES; i++) {
+    for (int i = 0; i < 6; i++) {
         string c = "assets/images/explosion/" + to_string(i + 1) +".png";
         string id = "explosion" + to_string(i + 1);
         if (!Resources::Instance()->load(c, id, renderer)) {
@@ -190,7 +203,7 @@ bool Game::loadAssets() {
         }
     }
     //Load Tutorial
-    for (int i = 1; i <= 3; i++) {
+    for (int i = 1; i <= 4; i++) {
         if (!Resources::Instance()->load("assets/images/TUTORIAL/" + to_string(i) + ".png", "Tutorial" + to_string(i), renderer  )) {
             SDL_Log("Failed to load tutorial");
             return false;
@@ -261,14 +274,14 @@ void Game::handleMainMenuEvents() {
                     int buttonWidth = 180;
                     int buttonHeight = 55;
 
-                    SDL_Rect endlessbuttonRect = {
+                    SDL_Rect EndlessbuttonRect = {
                         502,
                         465,
                         buttonWidth,
                         buttonHeight
                     };
 
-                    SDL_Rect exitbuttonRect = {
+                    SDL_Rect ExitbuttonRect = {
                         23,32,
                         76, 85
                     };
@@ -280,11 +293,14 @@ void Game::handleMainMenuEvents() {
                         791,274,
                         97, 100
                     };
-                    if (mouseX >= endlessbuttonRect.x && mouseX <= endlessbuttonRect.x + endlessbuttonRect.w &&
-                        mouseY >= endlessbuttonRect.y && mouseY <= endlessbuttonRect.y + endlessbuttonRect.h) {
+                    if (mouseX >= EndlessbuttonRect.x && mouseX <= EndlessbuttonRect.x + EndlessbuttonRect.w &&
+                        mouseY >= EndlessbuttonRect.y && mouseY <= EndlessbuttonRect.y + EndlessbuttonRect.h) {
+                        player->Start_game();
+                        int random = rand()%NUMBER_LEVEL + 1;
+                        map.load("assets/maps/level"+ to_string(random) + ".txt");
                         current_state = GAME_STATE::PLAYING;
-                    } else if (mouseX >= exitbuttonRect.x && mouseX <= exitbuttonRect.x + exitbuttonRect.w &&
-                        mouseY >= exitbuttonRect.y && mouseY <= exitbuttonRect.y + exitbuttonRect.h) {
+                    } else if (mouseX >= ExitbuttonRect.x && mouseX <= ExitbuttonRect.x + ExitbuttonRect.w &&
+                        mouseY >= ExitbuttonRect.y && mouseY <= ExitbuttonRect.y + ExitbuttonRect.h) {
                         isRunning = false;
                     } else if (mouseX >= musicButtonRect.x && mouseX <= musicButtonRect.x + musicButtonRect.w &&
                         mouseY >= musicButtonRect.y && mouseY <= musicButtonRect.y + musicButtonRect.h) {
@@ -293,6 +309,35 @@ void Game::handleMainMenuEvents() {
                     } else if (mouseX >= tutorialButtonRect.x && mouseX <= tutorialButtonRect.x + tutorialButtonRect.w &&
                         mouseY >= tutorialButtonRect.y && mouseY <= tutorialButtonRect.y + tutorialButtonRect.h) {
                         tutorial = true;
+                    } else {
+                        SDL_Rect Button {
+                            130, 318,
+                            59, 59
+                        };
+                        for (int i = 0; i < 2; i++) {
+                            for (int j = 0; j < 3; j++) {
+                                if (mouseX >= Button.x + 166 * i && mouseX <= Button.x + Button.w + 166 * i &&
+                                    mouseY >= Button.y + 74 * j && mouseY <= Button.y + Button.h + 74 * j) {
+                                        player->setup(i, j);
+                                }
+                            }
+                        }
+                        Button = {
+                            430, 343,
+                            40, 80
+                        };
+                        for (int i = 0; i <= 1; i++) {
+                            if (mouseX >= Button.x + 288 * i && mouseX <= Button.x + Button.w + 288 * i &&
+                                mouseY >= Button.y && mouseY <= Button.y + Button.w) {
+                                if (i == 0) {
+                                    background_Texture--;
+                                } else {
+                                    background_Texture++;
+                                }
+                                background_Texture = (background_Texture + 3)%3;
+                                if (background_Texture == 0) {background_Texture = 3;}
+                            }
+                        }
                     }
                 }
                 break;
@@ -361,10 +406,25 @@ void Game::handleGameTutorial() {
                 isRunning = false;
                 break;
             case SDL_KEYDOWN:
-                if (time_tutorial_popup < 0) tutorial = false;
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    player->set_time_imortal();
+                    tutorial = false;
+                }
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                if (time_tutorial_popup < 0) tutorial = false;
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    int mouseX = event.button.x;
+                    int mouseY = event.button.y;
+                    SDL_Rect Button_Exit{
+                        703, 133,
+                        53 , 54
+                    };
+                    if (mouseX >= Button_Exit.x && mouseX <= Button_Exit.x + Button_Exit.w &&
+                        mouseY >= Button_Exit.y && mouseY <= Button_Exit.y + Button_Exit.h) {
+                        player->set_time_imortal();
+                        tutorial = false;
+                    }
+                }
                 break;
             default:
                 break;
@@ -373,7 +433,43 @@ void Game::handleGameTutorial() {
 }
 
 void Game::renderMainMenu() {
-    Resources::Instance()->render("MainMenu" + to_string(Menu_id + 1), 0, 0, 900, 600, 900, 600, renderer, flip);
+    Resources::Instance()->render("MainMenu" + to_string(Menu_id + 1), 0, 0, 900,
+        600, 900, 600, renderer, flip);
+    int shield, bomb, length;
+    player->get_status(shield,  length, bomb);
+    write_status(renderer, bomb, 0);
+    write_status(renderer, shield, 1);
+    write_status(renderer, length - 1, 2);
+    Resources::Instance()->render("background" + to_string(background_Texture),492, 314,
+        204, 136, 2304, 1296, renderer, flip );
+}
+
+void Game::write_status(SDL_Renderer* renderer,const int &number,const int &size) const {
+    int StatusWidth = 107;
+    string Text = to_string(number);
+    SDL_Surface* Surface = TTF_RenderText_Solid(Font, Text.c_str(), textColor);
+    if (!Surface) {
+        SDL_Log("Unable to render score text surface! SDL_ttf Error: %s", TTF_GetError());
+        return;
+    }
+    SDL_Texture* statusTexture = SDL_CreateTextureFromSurface(renderer, Surface);
+    if (!statusTexture) {
+        SDL_Log("Unable to create score texture! SDL Error: %s", SDL_GetError());
+        SDL_FreeSurface(Surface);
+        return;
+    }
+    int textWidth = static_cast<int>(Surface->w * 2.5);
+    int textHeight = static_cast<int>(Surface->h * 2.5);
+    SDL_Rect renderStatus = {
+        189 + (107 - textWidth)/2,
+        310 + (textHeight + 20) * size,
+        textWidth,
+        textHeight
+    };
+
+    SDL_RenderCopy(renderer, statusTexture, nullptr, &renderStatus);
+    SDL_FreeSurface(Surface);
+    SDL_DestroyTexture(statusTexture);
 }
 
 void Game::renderPause() {
@@ -381,8 +477,7 @@ void Game::renderPause() {
     Resources::Instance()->render("Pause", PauseRect.x, PauseRect.y, PauseRect.w, PauseRect.h, PauseRect.w,PauseRect.h, renderer, flip);
 }
 
-void Game::renderTutorial(const int id) {
-    time_tutorial_popup--;
+void Game::renderTutorial(const int &id) {
     Resources::Instance()->render("Tutorial" + to_string(id), 150, 125, 600, 350, 600, 350, renderer, flip);
 }
 
@@ -401,7 +496,7 @@ void Game::renderGameOver() {
 
     std::string scoreText = std::to_string(score);
 
-    SDL_Surface* scoreSurface = TTF_RenderText_Solid(scoreFont, scoreText.c_str(), scoreColor);
+    SDL_Surface* scoreSurface = TTF_RenderText_Solid(Font, scoreText.c_str(), Color);
     if (!scoreSurface) {
         SDL_Log("Unable to render score text surface! SDL_ttf Error: %s", TTF_GetError());
         return;
@@ -440,7 +535,7 @@ void Game::renderScore() {
         ScoreWidth, ScoreHeight, renderer, flip);
 
     std::string scoreText = std::to_string(score);
-    SDL_Surface* scoreSurface = TTF_RenderText_Solid(scoreFont, scoreText.c_str(), scoreColor);
+    SDL_Surface* scoreSurface = TTF_RenderText_Solid(Font, scoreText.c_str(), Color);
     if (!scoreSurface) {
         SDL_Log("Unable to render score text surface! SDL_ttf Error: %s", TTF_GetError());
         return;
@@ -479,18 +574,17 @@ void Game::run() {
 
 void Game::resetGame() {
     player->set_direct(0);
-    player->setXY(6,6);
+    player->setXY(8,8);
     player->heal("full");
     bombs.clear();
     enemies.clear();
     explosions.clear();
-    map.load("assets/maps/level1.txt");
+    int random = rand()%NUMBER_LEVEL + 1;
+    map.load("assets/maps/level"+ to_string(random) + ".txt");
     score = 0;
     time_EnemySpawn = 0;
     tutorial = 0;
 }
-
-
 
 void Game::update() {
     switch (current_state) {
@@ -514,12 +608,17 @@ void Game::update() {
                     }
                     enemies.emplace_back(2, 15,1,renderer);
                     enemies.emplace_back(2, 1,15,renderer);
-                    enemies.emplace_back(1, 1,6,renderer);
-                    enemies.emplace_back(1, 15,6,renderer);
                 }
-                if (score > 50) {
-                    enemies.emplace_back(2, 6,1,renderer);
-                    enemies.emplace_back(2, 6, 15,renderer);
+                if (score >= 20) {
+                    enemies.emplace_back(3, 6,1,renderer);
+                    enemies.emplace_back(3, 6, 15,renderer);
+                }
+                if (score >= 40) {
+                    int random = (rand() + 1)%3;
+                    enemies.emplace_back(random, 1,6,renderer);
+                    srand(time(NULL));
+                    random = (rand() + 1)%3;
+                    enemies.emplace_back(1, 15,6,renderer);
                 }
             }
             time_EnemySpawn++;
@@ -542,6 +641,8 @@ void Game::update() {
         for (auto it = enemies.begin(); it != enemies.end();) {
             it->update(static_cast<int> (logic.round_2(player->getX())),static_cast<int> (logic.round_2(player->getY())), map); //Use it pointer access
             if (it->isDeath() == 3) {
+                char a = map.generate_item();
+                if (a != '0') map.Create_map(a, it->getX(), it->getY());
                 score++;
                 it = enemies.erase(it);
             }
@@ -577,22 +678,26 @@ void Game::update() {
 void Game::render() {
     SDL_RenderClear(renderer);
     SDL_Rect dest = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
-    if (!(background_Texture.empty())) {
-        Resources::Instance()->render(background_Texture,0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 2304, 1296, renderer, flip );
-    }
+    Resources::Instance()->render("background" + to_string(background_Texture),0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 2304, 1296, renderer, flip );
     renderScore();
     //Render the Map:
-    map.render(renderer);
+    map.render(renderer, background_Texture);
     // Draw Player:
 
     //Draw Bombs:
     for (const auto& bomb : bombs) {
         SDL_Rect bombRect = {CENTER_X + bomb.getX() * TILE_SIZE + 3, CENTER_Y + bomb.getY() * TILE_SIZE + 3, TILE_SIZE - 6, TILE_SIZE - 6};
-        Resources::Instance()->render("bomb",
+        if (bomb.gettime() <= TIME_EXPLODE/4  && bomb.gettime()%15 == 0 ) {
+            Resources::Instance()->render("bomb2",
             bombRect.x, bombRect.y,
             bombRect.w, bombRect.h,
             500, 500, renderer, flip);
-        //SDL_RenderCopy(renderer, bombTexture, NULL, &bombRect);
+        } else {
+            Resources::Instance()->render("bomb1",
+                bombRect.x, bombRect.y,
+                bombRect.w, bombRect.h,
+                500, 500, renderer, flip);
+        }
     }
     for (auto& explosion : explosions) {
         explosion.update();
@@ -604,7 +709,7 @@ void Game::render() {
             ++it;
         }
         if (current_explosion_Y == player->getY() && current_explosion_X == player->getX() && explosion.get_hurt() == false) {
-            player->hurt();
+            player->hurt("");
             explosion.is_hurt();
         }
         explosion.render(renderer,explosionTexture[0], 0,0);
@@ -619,7 +724,7 @@ void Game::render() {
                     break;
                 }
                 if (current_explosion_Y == player->getY() && current_explosion_X == player->getX() && explosion.get_hurt() == false) {
-                    player->hurt();
+                    player->hurt("");
                     explosion.is_hurt();
                 }
                 explosion.render(renderer,explosionTexture[i], u.first*i,u.second*i);
@@ -636,7 +741,8 @@ void Game::render() {
     for (auto& enemy : enemies) {
         enemy.render(renderer, player->getX(),player->getY());
         if (enemy.is_kill() && !enemy.is_hurt()) {
-            player->hurt();
+            if (enemy.ID() == 3) player->hurt("piercing");
+            else player->hurt("");
             enemy.hurt_player();
         }
     }

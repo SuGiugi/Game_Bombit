@@ -27,10 +27,10 @@ void Player::render_player(SDL_Renderer* renderer) {
     SDL_Rect playerRect = { CENTER_X +x * TILE_SIZE - 16,CENTER_Y + y * TILE_SIZE - 16, SIZE_TEXTURE_PLAYER, SIZE_TEXTURE_PLAYER};
     SDL_Rect player_frame;
     int frame;
-    STATUS player = {"player", PRESS_DELAY, NUM_FRAME_IDLE};
+    STATUS player = {"player", PRESS_DELAY, NUM_FRAME_IDLE[0]};
     if (!walk) {
         if (death == 1) player = {"player_death", ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH};
-            else player = {"player", PRESS_DELAY, NUM_FRAME_IDLE};
+            else player = {"player", PRESS_DELAY, NUM_FRAME_IDLE[0]};
         frame = timer/(player.speed_frame/player.num_frame);
         if (frame >= player.num_frame) {
             if (death == 1) {
@@ -42,14 +42,14 @@ void Player::render_player(SDL_Renderer* renderer) {
             }
         }
     } else {
-        player = {"player_walk", PLAYER_WALK_FRAME, NUM_FRAME_WALK};
+        player = {"player_walk", PLAYER_WALK_FRAME, NUM_FRAME_WALK[0]};
         frame = timer/(player.speed_frame/player.num_frame);
         float move_frame = frame;
         if (frame >= player.num_frame) {
             frame = 0;
         }
-        playerRect.x = CENTER_X + static_cast<int>((last_x + move_frame * (x - last_x)/(NUM_FRAME_WALK - 1)) * TILE_SIZE);
-        playerRect.y = CENTER_Y + static_cast<int>((last_y + move_frame * (y - last_y)/(NUM_FRAME_WALK - 1)) * TILE_SIZE);
+        playerRect.x = CENTER_X + static_cast<int>((last_x + move_frame * (x - last_x)/(player.num_frame - 1)) * TILE_SIZE);
+        playerRect.y = CENTER_Y + static_cast<int>((last_y + move_frame * (y - last_y)/(player.num_frame - 1)) * TILE_SIZE);
         if (abs(playerRect.x - CENTER_X - last_x * TILE_SIZE) > TILE_SIZE) playerRect.x = CENTER_X + x * TILE_SIZE - 16;
         else playerRect.x -= 16;
         if (abs(playerRect.y - CENTER_Y - last_y * TILE_SIZE) > TILE_SIZE) playerRect.y = CENTER_Y + y * TILE_SIZE - 16;
@@ -105,7 +105,7 @@ void Player::render_player(SDL_Renderer* renderer) {
     write_status(renderer, size_explode - 1, 2);
 };
 
-void Player::write_status(SDL_Renderer* renderer,const int number,const int &size) {
+void Player::write_status(SDL_Renderer* renderer,const int &number,const int &size) {
     int StatusWidth = 140;
     int StatusHeight = 260;
     std::string Text = std::to_string(number);
@@ -122,14 +122,14 @@ void Player::write_status(SDL_Renderer* renderer,const int number,const int &siz
     }
     int textWidth = Surface->w;
     int textHeight = Surface->h;
-    SDL_Rect renderScore = {
+    SDL_Rect renderStatus = {
         24 + StatusWidth/2 + StatusWidth/4 - (textWidth/2) + 2,
         24 + StatusHeight/4 + size * 60 + (StatusHeight/4 - textHeight)/2,
         textWidth,
         textHeight
     };
 
-    SDL_RenderCopy(renderer, statusTexture, nullptr, &renderScore);
+    SDL_RenderCopy(renderer, statusTexture, nullptr, &renderStatus);
 
     SDL_FreeSurface(Surface);
     SDL_DestroyTexture(statusTexture);
@@ -159,7 +159,7 @@ void Player::update(const int &direction, const int &next_x, const int &next_y, 
                         shield++;
                         break;
                     case '7':
-                        if (bombLimit <= 5) bombLimit++;
+                        if (bombLimit < 5) bombLimit++;
                         break;
                     case '8':
                         if (health > 0) health--;

@@ -27,16 +27,26 @@ public:
     int getDirect() const { return direct; }
     void render_player(SDL_Renderer* renderer);
     void set_time() {timer = 0;};
+    void set_time_imortal() {time_immortal = 30;};
     int get_health() const {return health;};
+    void get_status(int &a, int &b, int &c) const {
+        a = shield;
+        b = size_explode;
+        c = bombLimit;
+    }
     void heal(const string &c) {
         if (c == "full") {
             health = 2;
+            bombLimit = reset[0];
+            shield = reset[1];
+            size_explode = reset[2];
         }
         if (health < 2) health++;
     };
-    void hurt() {
+    void hurt(const string &c) {
         if (time_immortal < 0) {
-            if (shield > 0) shield --;
+            if (c == "piercing") health--;
+            else if (shield > 0) shield --;
             else if (health > 0) {
                 health--;
                 time_immortal = 30;
@@ -44,21 +54,38 @@ public:
         }
 
     }
-    void increase_explode() {
-        if (size_explode <= 5) size_explode++;
+    void setup(const int &x, const int &y) {
+        switch (y) {
+            case 0: if (x == 0 && bombLimit > 1) bombLimit--;
+                    else if (x == 1 && bombLimit < 5) bombLimit++;
+            break;
+            case 1: if (x == 0 && shield > 0) shield--;
+                    else if (x == 1 && shield < 5) shield++;
+            break;
+            case 2: if (x == 0 && size_explode > 2) size_explode--;
+                    else if (x == 1 && size_explode <= 5) size_explode++;
+            break;
+            default: break;
+        }
     }
-    int size() {return size_explode;};
+    int size() const {return size_explode;};
+    void Start_game(){
+        reset[0] = bombLimit;
+        reset[1] = shield;
+        reset[2] = size_explode;
+    }
 
     bool loadTexture(const string &filePath, const string &id, SDL_Renderer* renderer);
 
 private:
-    void write_status(SDL_Renderer* renderer,const int number,const int &size);
+    void write_status(SDL_Renderer* renderer,const int &number,const int &size);
     struct STATUS {
         string IMG;
         int speed_frame;
         int num_frame;
         STATUS(string IMG,const int speed_frame,const int num_frame) : IMG(IMG), speed_frame(speed_frame),num_frame(num_frame) {};
     };
+    int reset[3] = {2, 0, 2};
     int death = 0;
     int bombLimit; //Maximum bombs player can place
     int shield = 0;
