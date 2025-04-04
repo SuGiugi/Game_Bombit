@@ -21,7 +21,7 @@ public:
     void set_direct(const int& a) {direct = a;}
     void render_player(SDL_Renderer* renderer);
     void set_time() {timer = 0;}
-    void set_time_imortal()  {time_immortal = 30;} // cai thoi gian bat tu
+    void set_time_imortal()  {time_immortal = 60;} // cai thoi gian bat tu
 
     int getBombLimit() const; //Added method to retrieve bomb limit.
     int getX() const;
@@ -58,7 +58,7 @@ public:
             else if (health > 0) {
                 Mix_PlayChannel(-1, gOuch, 0);
                 health--;
-                time_immortal = 30;
+                time_immortal = 60;
             }
         }
 

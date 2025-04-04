@@ -657,7 +657,7 @@ void Game::resetGame() {
     map.load("assets/maps/level"+ to_string(random) + ".txt");
     score = 0;
     time_EnemySpawn = 0;
-    tutorial = 0;
+    cnt_tutorial = 0;
 }
 
 // UPDATE
@@ -694,11 +694,14 @@ void Game::update() {
                     enemies.emplace_back(3, 6, 15,renderer);
                 }
                 if (score >= 40) {
-                    int random = (rand() + 1)%3;
-                    enemies.emplace_back(random, 1,6,renderer);
                     srand(time(NULL));
-                    random = (rand() + 1)%3;
-                    enemies.emplace_back(1, 15,6,renderer);
+                    int random = (rand())%3 + 1;
+                    enemies.emplace_back(random, 1,6,renderer);
+                    enemies.emplace_back(random, 15,6,renderer);
+                }
+                if (score >= 50) {
+                    int random = (rand() + 1)%3 + 1;
+                    enemies.emplace_back(random, 9,9,renderer);
                 }
             }
             time_EnemySpawn++;
@@ -826,18 +829,16 @@ void Game::render() {
 
         }
     }
-
     // render ke dich va kiem tra xem co danh vao nguoi choi hay khong
     for (auto& enemy : enemies) {
         enemy.render(renderer, player->getX(),player->getY());
         if (enemy.is_kill() && !enemy.is_hurt()) {
+            SDL_Log("%d", enemy.is_hurt());
             if (enemy.ID() == 3) player->hurt("piercing");
             else player->hurt("");
             enemy.hurt_player();
         }
     }
-    // Draw Player:
-    player->render_player(renderer);
     // kiem tra xem nguoi choi da chet hay chua
     if (player->get_health() == 0) {
         if (player->isDeath() == 0) {
@@ -846,6 +847,9 @@ void Game::render() {
         }
         current_state = GAME_STATE::GAME_OVER;
     }
+
+    // Draw Player:
+    player->render_player(renderer);
     switch (current_state) {
         case GAME_STATE::MAIN_MENU:
             renderMainMenu();

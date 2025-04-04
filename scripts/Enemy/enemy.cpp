@@ -90,6 +90,7 @@ void Enemy::update(int target_x, int target_y, Map& map) {
             last_x = 0;
             last_y = 0;
         } else {
+            hurt = false;
             last_x = x0;
             last_y = y0;
             x0 += next_dx;
@@ -139,8 +140,9 @@ void Enemy::render(SDL_Renderer* renderer, int target_x, int target_y) {
         if (death == 2) enemy = {c + "_death", ENEMIES_DEATH_SPEED, NUM_FRAME_DEATH};
         else if (use) enemy = {c + "_attack", ENEMIES_ATTACK_SPEED[enemyID], NUM_FRAME_ATTACK[enemyID]};
         frame = time_frame/(enemy.speed_frame/enemy.num_frame);
-        if (use && frame > NUM_FRAME_ATTACK[enemyID] - 4) cast = true;
+        if (use && frame > NUM_FRAME_ATTACK[enemyID] - NUM_FRAME_EFFECT[enemyID]) cast = true;
         if (frame >= enemy.num_frame) {
+            cast = false;
             use = false;
             kill = false;
             if (death == 2) {

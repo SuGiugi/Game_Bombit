@@ -16,15 +16,16 @@ const int NUM_BACKGROUND  = 4;
 const int NUM_FRAME_IDLE[] = {6, 6, 6, 4};
 const int NUM_FRAME_WALK[] = {7, 8, 8, 6};
 const int NUM_FRAME_ATTACK[] = {0, 9, 11, 7};
+const int NUM_FRAME_EFFECT[] = {0, 4, 4, 3};
 const int NUM_FRAMES = 5;
 const int NUM_FRAME_DEATH = 10;
 
 //delay - time
 const int TIME_EXPLODE = 170;
 const int PRESS_DELAY = 15;
-const int ENEMIES_DELAY[] = {0, 25, 35, 25};
+const int ENEMIES_DELAY[] = {0, 25, 35, 22};
 const int ENEMIES_SPEED_FRAME[] = {20, 20, 20, 18};
-const int ENEMIES_ATTACK_SPEED[] = {0, 24, 30, 18};
+const int ENEMIES_ATTACK_SPEED[] = {0, 24, 30, 40};
 const int ENEMIES_DEATH_SPEED = 50;
 const int PLAYER_WALK_FRAME = 14;
 const int TIME_1SECOND = 1000;
