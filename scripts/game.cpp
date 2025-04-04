@@ -675,8 +675,8 @@ void Game::update() {
                     cnt_tutorial = 1;
                     tutorial = true;
                 }
-                enemies.emplace_back(3, 1,1,renderer);
-                enemies.emplace_back(3, 15,15,renderer);
+                enemies.emplace_back(1, 1,1,renderer);
+                enemies.emplace_back(1, 15,15,renderer);
                 if (score >= 10) {
                     if (cnt_tutorial == 1) {
                         cnt_tutorial = 2;
