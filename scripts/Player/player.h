@@ -53,7 +53,9 @@ public:
     // gay sat thuong cho nhan vat
     void hurt(const string &c) {
         if (time_immortal < 0) {
-            if (c == "piercing") health--;
+            if (c == "piercing") {
+                health = 0;
+            }
             else if (shield > 0) shield --;
             else if (health > 0) {
                 Mix_PlayChannel(-1, gOuch, 0);

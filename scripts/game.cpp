@@ -480,8 +480,8 @@ void Game::handleGameTutorial() {
                     int mouseX = event.button.x;
                     int mouseY = event.button.y;
                     SDL_Rect Button_Exit{
-                        703, 133,
-                        53 , 54
+                        650, 133,
+                        90 , 60
                     };
                     if (mouseX >= Button_Exit.x && mouseX <= Button_Exit.x + Button_Exit.w &&
                         mouseY >= Button_Exit.y && mouseY <= Button_Exit.y + Button_Exit.h) {
@@ -675,8 +675,8 @@ void Game::update() {
                     cnt_tutorial = 1;
                     tutorial = true;
                 }
-                enemies.emplace_back(1, 1,1,renderer);
-                enemies.emplace_back(1, 15,15,renderer);
+                enemies.emplace_back(3, 1,1,renderer);
+                enemies.emplace_back(3, 15,15,renderer);
                 if (score >= 10) {
                     if (cnt_tutorial == 1) {
                         cnt_tutorial = 2;
@@ -690,14 +690,14 @@ void Game::update() {
                         cnt_tutorial = 3;
                         tutorial = true;
                     }
-                    enemies.emplace_back(3, 6,1,renderer);
-                    enemies.emplace_back(3, 6, 15,renderer);
+                    enemies.emplace_back(3, 9,1,renderer);
+                    enemies.emplace_back(3, 9, 15,renderer);
                 }
                 if (score >= 40) {
                     srand(time(NULL));
                     int random = (rand())%3 + 1;
-                    enemies.emplace_back(random, 1,6,renderer);
-                    enemies.emplace_back(random, 15,6,renderer);
+                    enemies.emplace_back(random, 1,9,renderer);
+                    enemies.emplace_back(random, 15,9,renderer);
                 }
                 if (score >= 50) {
                     int random = (rand() + 1)%3 + 1;
@@ -833,12 +833,15 @@ void Game::render() {
     for (auto& enemy : enemies) {
         enemy.render(renderer, player->getX(),player->getY());
         if (enemy.is_kill() && !enemy.is_hurt()) {
-            SDL_Log("%d", enemy.is_hurt());
-            if (enemy.ID() == 3) player->hurt("piercing");
-            else player->hurt("");
+            SDL_Log("enemy.ID: %d", enemy.ID());
+            if (enemy.ID() == 3) {
+                SDL_Log("ebnemy");
+                player->hurt("piercing");
+            } else player->hurt("");
             enemy.hurt_player();
         }
     }
+
     // kiem tra xem nguoi choi da chet hay chua
     if (player->get_health() == 0) {
         if (player->isDeath() == 0) {
@@ -847,7 +850,6 @@ void Game::render() {
         }
         current_state = GAME_STATE::GAME_OVER;
     }
-
     // Draw Player:
     player->render_player(renderer);
     switch (current_state) {
