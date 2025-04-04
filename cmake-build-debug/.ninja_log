@@ -3,7 +3,7 @@
 29	5040	7654048924587515	CMakeFiles/Bombit.dir/scripts/object/bomb.cpp.obj	4f917c6e153da8be
 7	778	7636466808916733	CMakeFiles/PROJECT_NAME.dir/scripts/main.cpp.obj	b6dd8e6ba0124d9e
 779	909	7636466816626355	PROJECT_NAME.exe	ca9acbc744aa9fb6
-3	405	7654411311806084	build.ninja	2dd57dd20e58afb5
+3	405	7654412459860628	build.ninja	2dd57dd20e58afb5
 26	4978	7651092293815240	CMakeFiles/Bombit.dir/scripts/bomb.cpp.obj	de94ffb37716968b
 43	5048	7651092293982902	CMakeFiles/Bombit.dir/scripts/explosion.cpp.obj	2e0fb74625c89683
 6	4182	7654410669571663	CMakeFiles/Bombit.dir/scripts/main.cpp.obj	3787b374a8b02680
@@ -26,3 +26,5 @@
 16	4205	7654410669676751	CMakeFiles/Bombit.dir/scripts/Player/player.cpp.obj	aee76247e0827ab0
 67	4310	7654410670177107	CMakeFiles/Bombit.dir/scripts/Input/InputHandler.cpp.obj	fd531548d7dccb47
 33	4227	7654410669848396	CMakeFiles/Bombit.dir/scripts/Map/map.cpp.obj	83d7a656a418f1b
+6	2916	7654412467281429	CMakeFiles/Bombit.dir/scripts/game.cpp.obj	8d6a7dc5f297eba7
+2917	3179	7654412496382691	Bombit.exe	1a1c95ea32dafe28

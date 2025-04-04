@@ -833,9 +833,7 @@ void Game::render() {
     for (auto& enemy : enemies) {
         enemy.render(renderer, player->getX(),player->getY());
         if (enemy.is_kill() && !enemy.is_hurt()) {
-            SDL_Log("enemy.ID: %d", enemy.ID());
             if (enemy.ID() == 3) {
-                SDL_Log("ebnemy");
                 player->hurt("piercing");
             } else player->hurt("");
             enemy.hurt_player();
